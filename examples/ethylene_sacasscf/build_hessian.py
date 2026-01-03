@@ -16,9 +16,9 @@ natoms, atoms, pos, comment = pg.process_geometry('geometry.xyz')
 # if geometry file is in Angstrom converting to Bohr!
 pos *= 1.889725989
 
-print "Number of atoms =", natoms
-print "Atom labels:", atoms
-print "Positions in Bohr:\n", pos
+print("Number of atoms =", natoms)
+print("Atom labels:", atoms)
+print("Positions in Bohr:\n", pos)
 
 # choose TeraChem potential
 pyspawn.import_methods.into_hessian(pyspawn.potential.terachem_cas)

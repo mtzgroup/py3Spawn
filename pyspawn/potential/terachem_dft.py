@@ -34,7 +34,7 @@ def compute_elec_struct(self,zbackprop):
     if not hasattr(self,'backprop_electronic_phases'):
         self.backprop_electronic_phases = np.ones(nstates)
 
-    exec("pos = self.get_" + cbackprop + "positions()")
+    pos = getattr(self, "get_" + cbackprop + "positions")()
     pos_list = pos.tolist()
         
     TC = TCProtobufClient(host='localhost', port=self.tc_port)
@@ -51,7 +51,7 @@ def compute_elec_struct(self,zbackprop):
 
     # Check if the server is available
     avail = TC.is_available()
-    #print "TCPB Server available: {}".format(avail)
+    #print("TCPB Server available: {}").format(avail)
 
     # Write CI vectors and orbitals for initial guess and overlaps
     cwd = os.getcwd()
@@ -70,13 +70,13 @@ def compute_elec_struct(self,zbackprop):
     #print results
 
     f = np.zeros((nstates,self.numdims))
-    #print "results['gradient'] ", results['gradient']
-    #print "results['gradient'].flatten() ", results['gradient'].flatten()
+    #print("results['gradient'] "), results['gradient']
+    #print("results['gradient'].flatten() "), results['gradient'].flatten()
     f[self.istate,:] = -1.0 * results['gradient'].flatten()
 
-    exec("self.set_" + cbackprop + "energies(e)")
+    getattr(self, "set_" + cbackprop + "energies")(e)
 
-    exec("self.set_" + cbackprop + "forces(f)")
+    getattr(self, "set_" + cbackprop + "forces")(f)
 
 def init_h5_datasets(self):
     self.h5_datasets["time"] = 1

@@ -3,7 +3,7 @@ import os
 import h5py
 import numpy as np
 
-from pyspawn.traj import traj
+from .traj import traj
 
 
 class hessian(traj):
@@ -80,4 +80,4 @@ class hessian(traj):
             dset[idim, :] = de2dr2
             h5f.close()
 
-        print "Done building hessian.hdf5!"
+        print("Done building hessian.hdf5!")

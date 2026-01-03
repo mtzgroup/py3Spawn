@@ -27,7 +27,7 @@ class fmsobj(object):
                                            + "," + str(tempdict[key][i].imag) + ")"
                     else:
                         # and complex 2d arrays here
-                        if isinstance(tempdict[key][i], types.ListType):
+                        if isinstance(tempdict[key][i], list):
                             for j in range(len(tempdict[key][i])):
                                 if isinstance(tempdict[key][i][j], complex):
                                     tempdict[key][i][j] = "^complex(" + \
@@ -39,7 +39,7 @@ class fmsobj(object):
                 tempdict[key] = tempdict[key].to_dict()
                 (tempdict[key])["fmsobjlabel"] = fmsobjlabel
             # dictionaries here
-            if isinstance(tempdict[key], types.DictType):
+            if isinstance(tempdict[key], dict):
                 tempdict2 = (tempdict[key]).copy()
                 tempdict[key] = tempdict2
                 for key2 in tempdict2:
@@ -55,33 +55,32 @@ class fmsobj(object):
         """Convert dict structure to fmsobj structure"""
 
         for key in tempdict:
-            if isinstance(tempdict[key], types.UnicodeType):
+            if isinstance(tempdict[key], str):
                 tempdict[key] = str(tempdict[key])
-            if isinstance(tempdict[key], types.ListType):
-                if isinstance((tempdict[key])[0], types.FloatType):
+            if isinstance(tempdict[key], list):
+                if isinstance((tempdict[key])[0], float):
                     # convert 1d float lists to np arrays
                     tempdict[key] = np.asarray(tempdict[key],
                                                dtype=np.float64)
-                if isinstance((tempdict[key])[0], types.StringTypes):
+                if isinstance((tempdict[key])[0], str):
                     if (tempdict[key])[0][0] == "^":
                         for i in range(len(tempdict[key])):
                             tempdict[key][i] = eval(tempdict[key][i][1:])
                         tempdict[key] = np.asarray(tempdict[key],
                                                    dtype=np.complex128)
                     # new
-                    if isinstance((tempdict[key])[0], types.UnicodeType):
+                    if isinstance((tempdict[key])[0], str):
                         for i in range(len(tempdict[key])):
                             tempdict[key][i] = str(tempdict[key][i])
                     # end new
 
                 else:
-                    if isinstance((tempdict[key])[0], types.ListType):
-                        if isinstance((tempdict[key])[0][0], types.FloatType):
+                    if isinstance((tempdict[key])[0], list):
+                        if isinstance((tempdict[key])[0][0], float):
                             # convert 2d float lists to np arrays
                             tempdict[key] = np.asarray(tempdict[key],
                                                        dtype=np.float64)
-                        if isinstance((tempdict[key])[0][0],
-                                      types.StringTypes):
+                        if isinstance((tempdict[key])[0][0], str):
                             if (tempdict[key])[0][0][0] == "^":
                                 for i in range(len(tempdict[key])):
                                     for j in range(len(tempdict[key][i])):
@@ -107,21 +106,21 @@ class fmsobj(object):
         # replace unicode keys (as read by json) with python strings
         # unicode causes problems other places in the code
         for key in tempdict:
-            if isinstance(tempdict[key], types.DictType):
-                for key2 in tempdict[key]:
-                    if isinstance(key2, types.UnicodeType):
+            if isinstance(tempdict[key], dict):
+                for key2 in list(tempdict[key].keys()):
+                    if isinstance(key2, str):
                         tempdict[key][str(key2)] = tempdict[key].pop(key2)
 
         self.from_dict(**tempdict)
 
     def set_parameters(self, params):
 
-        print "### Setting " + self.__class__.__name__ + " parameters"
+        print("### Setting " + self.__class__.__name__ + " parameters")
         for key in params:
-            print key + " = " + str(params[key])
+            print(key + " = " + str(params[key]))
             method = "set_" + key
             if hasattr(self, method):
-                exec ("self.set_" + key + "(params[key])")
+                getattr(self, "set_" + key)(params[key])
             else:
-                print "### Parameter " + key + " not found in " + self.__class__.__name__ + ", exiting"
+                print("### Parameter " + key + " not found in " + self.__class__.__name__ + ", exiting")
                 quit()

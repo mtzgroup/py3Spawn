@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 import math
-from pyspawn.fmsobj import fmsobj
+from .fmsobj import fmsobj
 import h5py
 
 
@@ -218,7 +218,7 @@ class traj(fmsobj):
         if pos.shape == self.positions.shape:
             self.positions = pos.copy()
         else:
-            print "Error in set_positions"
+            print("Error in set_positions")
             sys.exit()
 
     def get_positions(self):
@@ -228,7 +228,7 @@ class traj(fmsobj):
         if pos.shape == self.positions_qm.shape:
             self.positions_qm = pos.copy()
         else:
-            print "Error in set_positions_qm"
+            print("Error in set_positions_qm")
             sys.exit()
 
     def get_positions_qm(self):
@@ -238,7 +238,7 @@ class traj(fmsobj):
         if pos.shape == self.positions_t.shape:
             self.positions_t = pos.copy()
         else:
-            print "Error in set_positions_t"
+            print("Error in set_positions_t")
             sys.exit()
 
     def get_positions_t(self):
@@ -248,7 +248,7 @@ class traj(fmsobj):
         if pos.shape == self.positions_tmdt.shape:
             self.positions_tmdt = pos.copy()
         else:
-            print "Error in set_positions_tmdt"
+            print("Error in set_positions_tmdt")
             sys.exit()
 
     def get_positions_tmdt(self):
@@ -258,7 +258,7 @@ class traj(fmsobj):
         if pos.shape == self.positions_tpdt.shape:
             self.positions_tpdt = pos.copy()
         else:
-            print "Error in set_positions_tpdt"
+            print("Error in set_positions_tpdt")
             sys.exit()
 
     def get_positions_tpdt(self):
@@ -268,7 +268,7 @@ class traj(fmsobj):
         if mom.shape == self.momenta_qm.shape:
             self.momenta_qm = mom.copy()
         else:
-            print "Error in set_momenta"
+            print("Error in set_momenta")
             sys.exit()
 
     def get_momenta_qm(self):
@@ -278,7 +278,7 @@ class traj(fmsobj):
         if f.shape == self.forces_i_qm.shape:
             self.forces_i_qm = f.copy()
         else:
-            print "Error in set_forces_i_qm"
+            print("Error in set_forces_i_qm")
             sys.exit()
 
     def get_forces_i_qm(self):
@@ -288,7 +288,7 @@ class traj(fmsobj):
         if mom.shape == self.momenta.shape:
             self.momenta = mom.copy()
         else:
-            print "Error in set_momenta"
+            print("Error in set_momenta")
             sys.exit()
 
     def get_momenta(self):
@@ -298,7 +298,7 @@ class traj(fmsobj):
         if mom.shape == self.momenta_t.shape:
             self.momenta_t = mom.copy()
         else:
-            print "Error in set_momenta_t"
+            print("Error in set_momenta_t")
             sys.exit()
 
     def get_momenta_t(self):
@@ -308,7 +308,7 @@ class traj(fmsobj):
         if mom.shape == self.momenta_tmdt.shape:
             self.momenta_tmdt = mom.copy()
         else:
-            print "Error in set_momenta_tmdt"
+            print("Error in set_momenta_tmdt")
             sys.exit()
 
     def get_momenta_tmdt(self):
@@ -318,7 +318,7 @@ class traj(fmsobj):
         if mom.shape == self.momenta_tpdt.shape:
             self.momenta_tpdt = mom.copy()
         else:
-            print "Error in set_momenta_tpdt"
+            print("Error in set_momenta_tpdt")
             sys.exit()
 
     def get_momenta_tpdt(self):
@@ -328,7 +328,7 @@ class traj(fmsobj):
         if e.shape == self.energies_qm.shape:
             self.energies_qm = e.copy()
         else:
-            print "Error in set_energies_qm"
+            print("Error in set_energies_qm")
             sys.exit()
 
     def get_energies_qm(self):
@@ -338,7 +338,7 @@ class traj(fmsobj):
         if e.shape == self.energies_t.shape:
             self.energies_t = e.copy()
         else:
-            print "Error in set_energies_t"
+            print("Error in set_energies_t")
             sys.exit()
 
     def get_energies_t(self):
@@ -348,7 +348,7 @@ class traj(fmsobj):
         if e.shape == self.energies_tmdt.shape:
             self.energies_tmdt = e.copy()
         else:
-            print "Error in set_energies_tmdt"
+            print("Error in set_energies_tmdt")
             sys.exit()
 
     def get_energies_tmdt(self):
@@ -358,7 +358,7 @@ class traj(fmsobj):
         if e.shape == self.energies_tpdt.shape:
             self.energies_tpdt = e.copy()
         else:
-            print "Error in set_energies_tpdt"
+            print("Error in set_energies_tpdt")
             sys.exit()
 
     def get_energies_tpdt(self):
@@ -368,7 +368,7 @@ class traj(fmsobj):
         if pos.shape == self.backprop_positions.shape:
             self.backprop_positions = pos.copy()
         else:
-            print "Error in set_backprop_positions"
+            print("Error in set_backprop_positions")
             sys.exit()
 
     def get_backprop_positions(self):
@@ -378,7 +378,7 @@ class traj(fmsobj):
         if mom.shape == self.backprop_momenta.shape:
             self.backprop_momenta = mom.copy()
         else:
-            print "Error in set_backprop_momenta"
+            print("Error in set_backprop_momenta")
             sys.exit()
 
     def get_backprop_momenta(self):
@@ -388,7 +388,7 @@ class traj(fmsobj):
         if wid.shape == self.widths.shape:
             self.widths = wid.copy()
         else:
-            print "Error in set_widths"
+            print("Error in set_widths")
             sys.exit()
 
     def get_widths(self):
@@ -398,7 +398,7 @@ class traj(fmsobj):
         if m.shape == self.masses.shape:
             self.masses = m.copy()
         else:
-            print "Error in set_masses"
+            print("Error in set_masses")
             sys.exit()
 
     def get_masses(self):
@@ -578,11 +578,11 @@ class traj(fmsobj):
         #         print "rescale t_parent ", t_parent
         factor = ((v_parent + t_parent - v_child) / t_parent)
         if factor < 0.0:
-            print "# Aborting spawn because child does not have"
-            print "# enough energy for momentum adjustment"
+            print("# Aborting spawn because child does not have")
+            print("# enough energy for momentum adjustment")
             return False
         factor = math.sqrt(factor)
-        print "# rescaling momentum by factor ", factor
+        print("# rescaling momentum by factor ", factor)
         p_child = factor * p_parent
         self.set_momenta(p_child)
         self.set_backprop_momenta(p_child)
@@ -593,7 +593,7 @@ class traj(fmsobj):
         if f.shape == self.forces.shape:
             self.forces = f.copy()
         else:
-            print "Error in set_forces"
+            print("Error in set_forces")
             sys.exit()
 
     def get_forces(self):
@@ -607,7 +607,7 @@ class traj(fmsobj):
         if f.shape == self.backprop_forces.shape:
             self.backprop_forces = f.copy()
         else:
-            print "Error in set_forces"
+            print("Error in set_forces")
             sys.exit()
 
     def get_backprop_forces(self):
@@ -621,7 +621,7 @@ class traj(fmsobj):
         if e.shape == self.energies.shape:
             self.energies = e.copy()
         else:
-            print "Error in set_forces"
+            print("Error in set_forces")
             sys.exit()
 
     def get_energies(self):
@@ -631,7 +631,7 @@ class traj(fmsobj):
         if e.shape == self.backprop_energies.shape:
             self.backprop_energies = e.copy()
         else:
-            print "Error in set_forces"
+            print("Error in set_forces")
             sys.exit()
 
     def get_backprop_energies(self):
@@ -641,7 +641,7 @@ class traj(fmsobj):
         if wf.shape == self.wf.shape:
             self.wf = wf.copy()
         else:
-            print "Error in set_wf"
+            print("Error in set_wf")
             sys.exit()
 
     def get_wf(self):
@@ -651,7 +651,7 @@ class traj(fmsobj):
         if wf.shape == self.prev_wf.shape:
             self.prev_wf = wf.copy()
         else:
-            print "Error in set_prev_wf"
+            print("Error in set_prev_wf")
             sys.exit()
 
     def get_prev_wf(self):
@@ -661,7 +661,7 @@ class traj(fmsobj):
         if wf.shape == self.backprop_wf.shape:
             self.backprop_wf = wf.copy()
         else:
-            print "Error in set_backprop_wf"
+            print("Error in set_backprop_wf")
             sys.exit()
 
     def get_backprop_wf(self):
@@ -671,7 +671,7 @@ class traj(fmsobj):
         if wf.shape == self.backprop_prev_wf.shape:
             self.backprop_prev_wf = wf.copy()
         else:
-            print "Error in set_backprop_prev_wf"
+            print("Error in set_backprop_prev_wf")
             sys.exit()
 
     def get_backprop_prev_wf(self):
@@ -681,7 +681,7 @@ class traj(fmsobj):
         if st.shape == self.spawntimes.shape:
             self.spawntimes = st.copy()
         else:
-            print "Error in set_spawntimes"
+            print("Error in set_spawntimes")
             sys.exit()
 
     def get_spawntimes(self):
@@ -691,7 +691,7 @@ class traj(fmsobj):
         if t.shape == self.timederivcoups.shape:
             self.timederivcoups = t.copy()
         else:
-            print "Error in set_spawntimes"
+            print("Error in set_spawntimes")
             sys.exit()
 
     def get_timederivcoups(self):
@@ -703,7 +703,7 @@ class traj(fmsobj):
             # derivative with respect to -t during back propagation
             self.backprop_timederivcoups = -1.0 * t.copy()
         else:
-            print "Error in set_spawntimes"
+            print("Error in set_spawntimes")
             sys.exit()
 
     def get_backprop_timederivcoups(self):
@@ -725,7 +725,7 @@ class traj(fmsobj):
         if t.shape == self.timederivcoups_qm.shape:
             self.timederivcoups_qm = t.copy()
         else:
-            print "Error in set_spawntimes"
+            print("Error in set_spawntimes")
             sys.exit()
 
     def get_timederivcoups_qm(self):
@@ -735,7 +735,7 @@ class traj(fmsobj):
         if tdc.shape == self.spawnlastcoup.shape:
             self.spawnlastcoup = tdc.copy()
         else:
-            print "Error in set_spawnlastcoup"
+            print("Error in set_spawnlastcoup")
             sys.exit()
 
     def get_spawnlastcoup(self):
@@ -745,7 +745,7 @@ class traj(fmsobj):
         if z.shape == self.z_spawn_now.shape:
             self.z_spawn_now = z.copy()
         else:
-            print "Error in set_z_spawn_now"
+            print("Error in set_z_spawn_now")
             sys.exit()
 
     def get_z_spawn_now(self):
@@ -755,7 +755,7 @@ class traj(fmsobj):
         if z.shape == self.z_dont_spawn.shape:
             self.z_dont_spawn = z.copy()
         else:
-            print "Error in set_z_dont_spawn"
+            print("Error in set_z_dont_spawn")
             sys.exit()
 
     def get_z_dont_spawn(self):
@@ -791,7 +791,7 @@ class traj(fmsobj):
             cbackprop = ""
         else:
             cbackprop = "backprop_"
-        if abs(eval("self.get_" + cbackprop + "time()")
+        if abs(getattr(self, "get_" + cbackprop + "time")()
                - self.get_firsttime()) < 1.0e-6:
             self.prop_first_step(zbackprop=zbackprop)
         else:
@@ -810,10 +810,10 @@ class traj(fmsobj):
         else:
             cbackprop = ""
             sign = 1.0
-        t = eval("self.get_" + cbackprop + "time()")
+        t = getattr(self, "get_" + cbackprop + "time")()
         t += sign * dt
-        exec ("self.set_" + cbackprop + "time(t)")
-        exec ("self.set_" + cbackprop + "time_half_step(t + sign * -0.5 * dt)")
+        getattr(self, "set_" + cbackprop + "time")(t)
+        getattr(self, "set_" + cbackprop + "time_half_step")(t + sign * -0.5 * dt)
         # if it is this trajectories first timestep (forward or backward)
         self.compute_elec_struct(zbackprop)
         # only output on forward propagation
@@ -847,9 +847,7 @@ class traj(fmsobj):
                     # check to see if trajectory is entering a spawning region
                     if (abs(tdc[jstate]) > thresh) and (z_dont_spawn[jstate] < 0.5):
                         spawnt[jstate] = self.get_time() - self.get_timestep()
-                        print "## trajectory " + self.get_label() + \
-                              " entered spawning region for state ", jstate, \
-                            " at time ", spawnt[jstate]
+                        print("## trajectory " + self.get_label() + " entered spawning region for state ", jstate, " at time ", spawnt[jstate])
                     else:
                         if (abs(tdc[jstate]) < (0.9 * thresh)) \
                                 and (z_dont_spawn[jstate] > 0.5):
@@ -893,7 +891,7 @@ class traj(fmsobj):
         #                         shutil.move(filename, filename2)
         h5f = h5py.File(filename, "a")
         groupname = traj_or_cent + self.label
-        if groupname not in h5f.keys():
+        if groupname not in list(h5f.keys()):
             self.create_h5_traj(h5f, groupname)
         trajgrp = h5f.get(groupname)
         all_datasets = self.h5_datasets.copy()
@@ -913,9 +911,9 @@ class traj(fmsobj):
             else:
                 ipos = 0
                 dset[1:(l + 1), 0:n] = dset[0:l, 0:n]
-            getcom = "self.get_" + cbackprop + key + "()"
+            getcom = "get_" + cbackprop + key
             #             print "getcom =", getcom
-            tmp = eval(getcom)
+            tmp = getattr(self, getcom)()
             #             print "ipos =", ipos
             if n != 1:
                 dset[ipos, 0:n] = tmp[0:n]
@@ -994,8 +992,7 @@ class traj(fmsobj):
             dset = trajgrp[dset_name][:]
             data = np.zeros(len(dset[ipoint, :]))
             data = dset[ipoint, :]
-            comm = "self." + dset_name + "_qm" + suffix + " = data"
-            exec (comm)
+            setattr(self, dset_name + "_qm" + suffix, data)
         #             print "comm ", comm
         #             print "dset[ipoint,:] ", dset[ipoint,:]
         h5f.close()
@@ -1022,8 +1019,7 @@ class traj(fmsobj):
             dset = trajgrp[dset_name][:]
             data = np.zeros(len(dset[ipoint, :]))
             data = dset[ipoint, :]
-            comm = "self." + dset_name + "_qm = data"
-            exec (comm)
+            setattr(self, dset_name + "_qm", data)
             # print "comm ", comm
             # print "dset[ipoint,:] ", dset[ipoint,:]
         h5f.close()
@@ -1091,7 +1087,7 @@ class traj(fmsobj):
         Works at finite temperature if a temp parameter is passed
         If temp is not provided temp = 0 is assumed"""
 
-        print "## randomly selecting Wigner initial conditions at T=", temp
+        print("## randomly selecting Wigner initial conditions at T=", temp)
         ndims = self.get_numdims()
 
         h5f = h5py.File('hessian.hdf5', 'r')
@@ -1124,16 +1120,16 @@ class traj(fmsobj):
         evals = evals[idx]
         modes = modes[:, idx]
 
-        print '# eigenvalues of the mass-weighted hessian are (a.u.)'
-        print evals
+        print('# eigenvalues of the mass-weighted hessian are (a.u.)')
+        print(evals)
 
         # Checking if frequencies make sense
         freq_cm = np.sqrt(evals[0:ndims - 6])*219474.63
         n_high_freq = 0
-        print 'Frequencies in cm-1:'
+        print('Frequencies in cm-1:')
         for freq in freq_cm:
             if freq > 5000: n_high_freq += 1
-            print freq
+            print(freq)
             assert not np.isnan(freq), "NaN encountered in frequencies! Exiting"
 
         if n_high_freq > 0: print("Number of frequencies > 5000cm-1:", n_high_freq)
@@ -1145,7 +1141,7 @@ class traj(fmsobj):
         # finite temperature distribution
         if temp > 1e-05:
             beta = 1 / (temp * 0.000003166790852)
-            print "beta = ", beta
+            print("beta = ", beta)
             alphax = alphax * np.tanh(np.sqrt(evals[0:ndims - 6]) * beta / 2)
         sigx = np.sqrt(1.0 / (4.0 * alphax))
         sigp = np.sqrt(alphax)
@@ -1176,14 +1172,14 @@ class traj(fmsobj):
         zpe = np.sum(alphax[0:ndims - 6])
         ke = 0.5 * np.sum(mom * mom / m)
         #         print np.sqrt(np.tanh(evals[0:ndims-6]/(2*0.0031668)))
-        print "# ZPE = ", zpe
-        print "# kinetic energy = ", ke
+        print("# ZPE = ", zpe)
+        print("# kinetic energy = ", ke)
     
     def read_initial_conds(self):
         ###NOT FINISHED
         """Get already sampled position and momenta from initial condition filesd"""
 
-        print "## reading initial conditions from file:"
+        print("## reading initial conditions from file:")
         ndims = self.get_numdims()
         m = self.get_masses()
         sqrtm = np.sqrt(m)
@@ -1302,4 +1298,4 @@ class traj(fmsobj):
         ke = 0.5 * np.sum(mom * mom / m)
         #         print np.sqrt(np.tanh(evals[0:ndims-6]/(2*0.0031668)))
 #        print "# ZPE = ", zpe
-        print "# kinetic energy = ", ke
+        print("# kinetic energy = ", ke)

@@ -66,7 +66,8 @@ def get_qm_data_from_h5_next_time(self):
 # build DGAS coefficients
 def build_DGAS_coeffs(self):
     ntraj = self.get_num_traj_qm()
-    nstat = self.traj.itervalues().next().get_numstates()
+    # Python 3 fix: use next(iter(...)) instead of .itervalues().next()
+    nstat = next(iter(self.traj.values())).get_numstates()
     #dc = dict()
     #for keyi in self.traj:
     #    i = self.traj_map[keyi]
@@ -157,7 +158,8 @@ def build_Sdot_nuc_DGAS(self):
 
 def build_Sdot_elec_DGAS(self):
     ntraj = self.get_num_traj_qm()    
-    nstat = self.traj.itervalues().next().get_numstates()
+    # Python 3 fix: use next(iter(...)) instead of .itervalues().next()
+    nstat = next(iter(self.traj.values())).get_numstates()
     self.Sdot_elec = np.zeros((ntraj,ntraj), dtype=np.complex128)    
     for keycent in self.centroids:
         keyi, keyj = str.split(keycent,"_a_")
@@ -166,12 +168,12 @@ def build_Sdot_elec_DGAS(self):
         if i < ntraj and j < ntraj:
             # calculate NPI derivative coupling (as defined in the DGAS paper)
             S_ad = self.centroids[keycent].get_S_elec_flat().reshape((nstat,nstat))
-            print "S_ad", S_ad
+            print("S_ad", S_ad)
             sii = np.dot(self.dgas_coeffs[i,j,:],np.matmul(S_ad,self.dgas_coeffs_next_time[i,j,:]))
             sjj = np.dot(self.dgas_coeffs[j,i,:],np.matmul(S_ad,self.dgas_coeffs_next_time[j,i,:]))
             sij = np.dot(self.dgas_coeffs[i,j,:],np.matmul(S_ad,self.dgas_coeffs_next_time[j,i,:]))
             sji = np.dot(self.dgas_coeffs[j,i,:],np.matmul(S_ad,self.dgas_coeffs_next_time[i,j,:]))
-            print "sii", sii, sij, sji, sjj
+            print("sii", sii, sij, sji, sjj)
             vinorm = np.sqrt(1.0 - sii*sii)
             vjnorm = np.sqrt(1.0 - sjj*sjj)
             xixj = np.dot(self.dgas_coeffs[i,j,:],self.dgas_coeffs[j,i,:])
@@ -188,11 +190,11 @@ def build_Sdot_elec_DGAS(self):
                 vivj = (xixj_next - sii*sij - sji*sjj + sii*xixj*sjj) / (vinorm*vjnorm)
             else:
                 vivj = 0.0
-            print "xixj", xixj, xivj, vixj, vivj
+            print("xixj", xixj, xivj, vixj, vivj)
 
             acii = np.arccos(sii)
             acjj = np.arccos(sjj)
-            print "acii, acjj", acii, acjj
+            print("acii, acjj", acii, acjj)
 
             #ADtmp = acjj*acjj-acii*acii
             BCtmp1 = acii-acjj
@@ -217,15 +219,15 @@ def build_Sdot_elec_DGAS(self):
                 D = vivj * acjj * (np.sqrt((1.0-sii*sii)*(1.0-sjj*sjj))*acjj + (sii*sjj-1.0)*acii) / (acjj*acjj-acii*acii)
 
             h = self.traj[keyi].get_timestep()
-            print "ABCDh", A, B, C, D, h
+            print("ABCDh", A, B, C, D, h)
 
             Sdot_tmp = 1.0 / h * ( A + B + C + D )  
             self.Sdot_elec[i,j] = self.S_nuc[i,j] * Sdot_tmp
-            print "self.Sdot_elec[i,j]", i, j, self.Sdot_elec[i,j], self.Sdot_nuc[i,j]
+            print("self.Sdot_elec[i,j]", i, j, self.Sdot_elec[i,j], self.Sdot_nuc[i,j])
     
             # THIS IS NOT CORRECT!
             #self.Sdot_elec[j,i] = -1.0*np.conj(self.Sdot_elec[i,j])
-            #print "self.Sdot_elec[j,i]", i, j, self.Sdot_elec[j,i], self.Sdot_nuc[i,j]
+            #print("self.Sdot_elec[j,i]"), i, j, self.Sdot_elec[j,i], self.Sdot_nuc[i,j]
 
             # Compute [j,i] elements correctly!
             stmp = sii
@@ -234,7 +236,7 @@ def build_Sdot_elec_DGAS(self):
             stmp = sij
             sij = sji
             sji = stmp
-            print "sii", sii, sij, sji, sjj
+            print("sii", sii, sij, sji, sjj)
             vinorm = np.sqrt(1.0 - sii*sii)
             vjnorm = np.sqrt(1.0 - sjj*sjj)
             xixj = np.dot(self.dgas_coeffs[j,i,:],self.dgas_coeffs[i,j,:])
@@ -251,11 +253,11 @@ def build_Sdot_elec_DGAS(self):
                 vivj = (xixj_next - sii*sij - sji*sjj + sii*xixj*sjj) / (vinorm*vjnorm)
             else:
                 vivj = 0.0
-            print "xixj", xixj, xivj, vixj, vivj
+            print("xixj", xixj, xivj, vixj, vivj)
 
             acii = np.arccos(sii)
             acjj = np.arccos(sjj)
-            print "acii, acjj", acii, acjj
+            print("acii, acjj", acii, acjj)
 
             #ADtmp = acjj*acjj-acii*acii
             BCtmp1 = acii-acjj
@@ -280,11 +282,11 @@ def build_Sdot_elec_DGAS(self):
                 D = vivj * acjj * (np.sqrt((1.0-sii*sii)*(1.0-sjj*sjj))*acjj + (sii*sjj-1.0)*acii) / (acjj*acjj-acii*acii)
 
             h = self.traj[keyi].get_timestep()
-            print "ABCDh", A, B, C, D, h
+            print("ABCDh", A, B, C, D, h)
 
             Sdot_tmp = 1.0 / h * ( A + B + C + D )  
             self.Sdot_elec[j,i] = self.S_nuc[j,i] * Sdot_tmp
-            print "self.Sdot_elec[j,i]", i, j, self.Sdot_elec[j,i], self.Sdot_nuc[j,i]
+            print("self.Sdot_elec[j,i]", i, j, self.Sdot_elec[j,i], self.Sdot_nuc[j,i])
 
 def build_Sdot_DGAS(self):
     self.Sdot = self.Sdot_nuc + self.Sdot_elec
@@ -292,15 +294,15 @@ def build_Sdot_DGAS(self):
 # build the Hamiltonian matrix, H
 # This routine assumes that S is already built
 def build_H_DGAS(self):
-    print "# building potential energy matrix"
+    print("# building potential energy matrix")
     self.build_V_DGAS()
-    print "# building NAC matrix"
+    print("# building NAC matrix")
     #self.build_tau_DGAS()
-    print "# building kinetic energy matrix"
+    print("# building kinetic energy matrix")
     self.build_T_DGAS()
     ntraj = self.get_num_traj_qm()
     shift = self.get_qm_energy_shift() * np.identity(ntraj)
-    print "# summing Hamiltonian"
+    print("# summing Hamiltonian")
     #self.H = self.T + self.V + self.tau + shift
     self.H = self.T + self.V + shift
 
@@ -365,4 +367,3 @@ def build_T_DGAS(self):
                 j = self.traj_map[keyj]
                 if j < ntraj:
                     self.T[i,j] = cg.kinetic_nuc(self.traj[keyi], self.traj[keyj],positions_i="positions_qm",positions_j="positions_qm",momenta_i="momenta_qm",momenta_j="momenta_qm") * self.S_elec[i,j]
-

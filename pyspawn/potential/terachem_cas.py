@@ -41,7 +41,7 @@ def compute_elec_struct(self, zbackprop):
     if not hasattr(self, 'backprop_electronic_phases'):
         self.backprop_electronic_phases = np.ones(nstates)
 
-    exec("pos = self.get_" + cbackprop + "positions()")
+    pos = getattr(self, "get_" + cbackprop + "positions")()
     pos_list = pos.tolist()
 
     TC = TCProtobufClient(host='localhost', port=self.tc_port)
@@ -58,7 +58,7 @@ def compute_elec_struct(self, zbackprop):
 
     # Check if the server is available
     avail = TC.is_available()
-#     print "TCPB Server available: {}".format(avail)
+#     print("TCPB Server available: {}").format(avail)
 
     # Write CI vectors and orbitals for initial guess and overlaps
     cwd = os.getcwd()
@@ -66,13 +66,13 @@ def compute_elec_struct(self, zbackprop):
         civecout = os.path.join(cwd, "CIvecs.Singlet.old")
         orbout = os.path.join(cwd, "c0.old")
         orbout_t = os.path.join(cwd, "c0_t.old")
-        eval("self.get_" + cbackprop + "civecs()").tofile(civecout)
-        eval("self.get_" + cbackprop + "orbs()").tofile(orbout)
+        getattr(self, "get_" + cbackprop + "civecs")().tofile(civecout)
+        getattr(self, "get_" + cbackprop + "orbs")().tofile(orbout)
         n = int(math.floor(math.sqrt(self.get_norbs())))
-        ((np.resize(eval("self.get_" + cbackprop + "orbs()"),
+        ((np.resize(getattr(self, "get_" + cbackprop + "orbs")(),
                     (n, n)).T).flatten()).tofile(orbout_t)
-#         print "old civecs", eval("self.get_" + cbackprop + "civecs()")
-#         print "old orbs", eval("self.get_" + cbackprop + "orbs()")
+#         print("old civecs"), getattr(self, "get_" + cbackprop + "civecs")()
+#         print("old orbs"), getattr(self, "get_" + cbackprop + "orbs")()
         zolaps = True
         if ("casscf" in self.tc_options):
             if (self.tc_options["casscf"] == "yes"):
@@ -103,49 +103,48 @@ def compute_elec_struct(self, zbackprop):
 #     print results
 
     civecfilename = os.path.join(results['job_scr_dir'], "CIvecs.Singlet.dat")
-    exec("self.set_" + cbackprop + "civecs(np.fromfile(civecfilename))")
-#     print "new civecs", self.civecs
+    getattr(self, "set_" + cbackprop + "civecs")(np.fromfile(civecfilename))
+#     print("new civecs"), self.civecs
 
 #     orbfilename = os.path.join(results['job_scr_dir'], "c0")
     orbfilename = results['orbfile']
-    exec("self.set_" + cbackprop + "orbs((np.fromfile(orbfilename)).flatten())")
+    getattr(self, "set_" + cbackprop + "orbs")((np.fromfile(orbfilename)).flatten())
 
     self.set_norbs(self.get_orbs().size)
 
     # BGL transpose hack is temporary
     n = int(math.floor(math.sqrt(self.get_norbs())))
     clastchar = orbfilename.strip()[-1]
-#     print "n", n
-#     print "clastchar", clastchar
+#     print("n"), n
+#     print("clastchar"), clastchar
     if clastchar != '0':
-        tmporbs = eval("self.get_" + cbackprop + "orbs()")
-        exec("self.set_" + cbackprop +
-             "orbs(((tmporbs.reshape((n,n))).T).flatten())")
+        tmporbs = getattr(self, "get_" + cbackprop + "orbs")()
+        getattr(self, "set_" + cbackprop + "orbs")(((tmporbs.reshape((n,n))).T).flatten())
     # end transpose hack
 
-#     print "new orbs", eval("self.get_" + cbackprop + "orbs()")
+#     print("new orbs"), getattr(self, "get_" + cbackprop + "orbs")()
     orbout2 = os.path.join(cwd, "c0.new")
-    eval("self.get_" + cbackprop + "orbs()").tofile(orbout2)
+    getattr(self, "get_" + cbackprop + "orbs")().tofile(orbout2)
 
     self.set_ncivecs(self.get_civecs().size)
 
     f = np.zeros((nstates, self.numdims))
-#     print "results['gradient'] ", results['gradient']
-#     print "results['gradient'].flatten() ", results['gradient'].flatten()
+#     print("results['gradient'] "), results['gradient']
+#     print("results['gradient'].flatten() "), results['gradient'].flatten()
     f[self.istate, :] = -1.0 * results['gradient'].flatten()
 
-    exec("self.set_" + cbackprop + "energies(e)")
-    exec("self.set_" + cbackprop + "forces(f)")
+    getattr(self, "set_" + cbackprop + "energies")(e)
+    getattr(self, "set_" + cbackprop + "forces")(f)
 
     # if False:
     if zolaps:
-        exec("pos2 = self.get_" + cbackprop + "prev_wf_positions_in_angstrom()")
-#         print 'pos2.tolist()', pos2.tolist()
-#         print 'civecfilename', civecfilename
-#         print 'civecout', civecout
-#         print 'orbfilename', orbfilename
-#         print 'orbout2', orbout2
-#         print 'orbout', orbout
+        pos2 = getattr(self, "get_" + cbackprop + "prev_wf_positions_in_angstrom")()
+#         print('pos2.tolist()'), pos2.tolist()
+#         print('civecfilename'), civecfilename
+#         print('civecout'), civecout
+#         print('orbfilename'), orbfilename
+#         print('orbout2'), orbout2
+#         print('orbout'), orbout
         options = base_options
 
         options["geom2"] = pos2.tolist()
@@ -154,30 +153,28 @@ def compute_elec_struct(self, zbackprop):
         options["orb1afile"] = orbout2
         options["orb2afile"] = orbout
 
-#         print 'pos_list', pos_list
+#         print('pos_list'), pos_list
         results2 = TC.compute_job_sync("ci_vec_overlap", pos_list,
                                        "bohr", **options)
-#         print "results2", results2
+#         print("results2"), results2
         S = results2['ci_overlap']
-#         print "S before phasing ", S
+#         print("S before phasing "), S
 
         # phasing electronic overlaps
         for jstate in range(nstates):
-            S[:, jstate] *= eval("self.get_" + cbackprop +
-                                 "electronic_phases()[jstate]")
-            S[jstate, :] *= eval("self.get_" + cbackprop +
-                                 "electronic_phases()[jstate]")
+            S[:, jstate] *= getattr(self, "get_" + cbackprop + "electronic_phases")()[jstate]
+            S[jstate, :] *= getattr(self, "get_" + cbackprop + "electronic_phases")()[jstate]
 
         for jstate in range(nstates):
             if S[jstate, jstate] < 0.0:
-                ep = eval("self.get_" + cbackprop + "electronic_phases()")
+                ep = getattr(self, "get_" + cbackprop + "electronic_phases")()
                 ep[jstate] *= -1.0
-                exec("self.set_" + cbackprop + "electronic_phases(ep)")
+                getattr(self, "set_" + cbackprop + "electronic_phases")(ep)
                 # I'm not sure if this line is right, but it seems to be working
                 S[jstate, :] *= -1.0
 
-#         print "S", S
-        exec("self.set_" + cbackprop + "S_elec_flat(S.flatten())")
+#         print("S"), S
+        getattr(self, "set_" + cbackprop + "S_elec_flat")(S.flatten())
 
         W = np.zeros((2, 2))
         W[0, 0] = S[istate, istate]
@@ -192,7 +189,7 @@ def compute_elec_struct(self, zbackprop):
                 W[0,1] = S[istate,jstate]
                 W[1,1] = S[jstate,jstate]
                 tdc[jstate] = self.compute_tdc(W)
-#                 print "tdc", tdc[jstate]
+#                 print("tdc"), tdc[jstate]
 
 #         tmp=self.compute_tdc(W)
 #         tdc = np.zeros(self.numstates)
@@ -202,13 +199,12 @@ def compute_elec_struct(self, zbackprop):
 #             jstate = 1
 #             tdc[jstate] = tmp
 #
-#         print "tdc2 ", tdc
-        exec("self.set_" + cbackprop + "timederivcoups(tdc)")
+#         print("tdc2 "), tdc
+        getattr(self, "set_" + cbackprop + "timederivcoups")(tdc)
     else:
-        exec("self.set_" + cbackprop +
-             "timederivcoups(np.zeros(self.numstates))")
+        getattr(self, "set_" + cbackprop + "timederivcoups")(np.zeros(self.numstates))
 
-    exec("self.set_" + cbackprop + "prev_wf_positions(pos)")
+    getattr(self, "set_" + cbackprop + "prev_wf_positions")(pos)
 
 
 def compute_electronic_overlap(self, pos1, civec1, orbs1, pos2, civec2, orbs2):

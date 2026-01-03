@@ -1,71 +1,127 @@
-                                                                                     
-                                                                                     
-                          .M"""bgd                                               
-                         ,MI    "Y                                               
-    `7MMpdMAo.`7M'   `MF'`MMb.   `7MMpdMAo.  ,6"Yb.`7M'    ,A    `MF'`7MMpMMMb.  
-      MM   `Wb  VA   ,V    `YMMNq. MM   `Wb 8)   MM  VA   ,VAA   ,V    MM    MM  
-      MM    M8   VA ,V   .     `MM MM    M8  ,pm9MM   VA ,V  VA ,V     MM    MM  
-      MM   ,AP    VVV    Mb     dM MM   ,AP 8M   MM    VVV    VVV      MM    MM  
-      MMbmmd'     ,V     P"Ybmmd"  MMbmmd'  `Moo9^Yo.   W      W     .JMML  JMML.
-      MM         ,V                MM                                            
-    .JMML.    OOb"               .JMML.
+pySpawn
+=======
 
+Version 1.0.0
 
-
-pySpawn17
-=========
-
-version 1.0
-
-created by
-Benjamin G. Levine
+Created by  
+Benjamin G. Levine  
 Stony Brook University
 
-A trim but extensible full multiple spawning software package, written in python and distributed under the MIT License.
+pySpawn is a full multiple spawning (FMS) software package written in Python.  
+It is designed to be minimalistic, extensible, and suitable for ab initio nonadiabatic molecular dynamics simulations.  
+The code is distributed under the MIT License.
 
+---
 
 Citation
 ========
 
-If you use pySpawn, we ask that you cite the paper at the following DOI:
+If you use pySpawn, please cite:
 
 https://doi.org/10.1021/acs.jctc.0c00575
 
-If you use the OpenMolcas interface, please cite both the paper above and the paper at the following DOI:
+If you use the OpenMolcas interface, please also cite:
 
 https://doi.org/10.1021/acs.jctc.4c00855
 
+---
 
 License
 =======
 
-See LICENSE file
+See the `LICENSE` file.
 
+---
 
 Features
 ========
 
-This is an ab initio multiple spawning code written in python.  It is designed to be rather minimalistic, but easily extensible.  Right now, it has the following features:
+pySpawn currently provides the following capabilities:
 
--  Runs in the adiabatic representation with derivative couplings computed via NPI.
--  Interface to (a development version of) TeraChem via the tcpb interface. 
--  Interface to OpenMolcas
--  SSAIMS: Stochastic-Selection AIMS (optional per-run)
--  An analysis module for processing of simulation data.
+- Full multiple spawning in the adiabatic representation
+- Derivative couplings computed via NPI
+- Interface to a development version of TeraChem (via tcpb)
+- Interface to OpenMolcas
+- SSAIMS. Stochastic Selection AIMS (optional per run)
+- Analysis tools for post-processing simulation data
 
-This code is currently under development.  Example jobs are provided.  Documentation is present, but a work in progress.
+The code is under active development.  
+Example jobs and partial documentation are included.
+
+---
+
+Installation
+============
+
+pySpawn requires Python 3.8 or newer.  
+Installation should be performed using pip inside a virtual environment to avoid dependency conflicts.
+
+Option 1. Install using a virtual environment (recommended)
+-----------------------------------------------------------
+
+Step 1. Create and activate a virtual environment
+
+    python3 -m venv pyspawn-env
+    source pyspawn-env/bin/activate
+
+Step 2. Upgrade pip
+
+    pip install --upgrade pip
+
+Step 3. Install pySpawn
+
+From the root directory of the source tree:
+
+    pip install .
+
+Step 4. Verify the installation
+
+    python -c "import pyspawn; print(pyspawn.__file__)"
+
+If no error is raised, the installation is successful.
+
+Option 2. Install into a custom directory (advanced users)
+----------------------------------------------------------
+
+This is useful on clusters or systems without write access to site-packages.
+
+    python3 -m pip install . --target /path/to/pyspawn
+    export PYTHONPATH=/path/to/pyspawn:$PYTHONPATH
+
+To verify:
+
+    PYTHONPATH=/path/to/pyspawn python3 -c "import pyspawn; print(pyspawn.__file__)"
+
+---
+
+Dependencies
+============
+
+pySpawn depends on the following Python packages:
+
+- NumPy (>=1.21,<1.24)
+- h5py (>=3,<4)
+
+The NumPy version is pinned to maintain compatibility with commonly used scientific packages such as SciPy, TensorFlow, and Numba.
+
+---
 
 Interfaces
 ==========
 
-At present only two interfaces are provided: one for (a development version of) TeraChem and one for OpenMolcas.
+pySpawn currently provides interfaces to:
+
+- TeraChem (development version)
+- OpenMolcas
+
+These interfaces require separate installation and configuration of the corresponding electronic structure software.
+
+---
 
 Contact
 =======
 
-pySpawn is developed and maintained primarily by Benjamin G. Levine, ben.levine@stonybrook.edu.
+pySpawn is developed and maintained primarily by:
 
-
-
-
-
+Benjamin G. Levine  
+ben.levine@stonybrook.edu

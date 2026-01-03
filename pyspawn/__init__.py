@@ -1,16 +1,16 @@
 import numpy as np
 
-from pyspawn.fmsobj import fmsobj
-from pyspawn.traj import traj
-from pyspawn.hessian import hessian
-import pyspawn.complexgaussian
-from pyspawn.simulation import simulation
-import pyspawn.fms_analysis
-from fafile import fafile
-import pyspawn.import_methods
-import pyspawn.general
-import pyspawn.qm_integrator
-import pyspawn.qm_hamiltonian
-import pyspawn.potential
-import pyspawn.classical_integrator
-import pyspawn.plotting
+from .fmsobj import fmsobj
+from .traj import traj
+from .hessian import hessian
+from . import complexgaussian
+from .simulation import simulation
+from . import fms_analysis
+from .fafile import fafile
+from . import import_methods
+from . import general
+from . import qm_integrator
+from . import qm_hamiltonian
+from . import potential
+from . import classical_integrator
+from . import plotting

@@ -3,7 +3,7 @@ import numpy as np
 import os
 import shutil
 import sys
-from molcas_interface import Input, Environment, ReadOutput
+from .molcas_interface import Input, Environment, ReadOutput
 
 #################################################
 ### electronic structure routines go here #######
@@ -51,7 +51,7 @@ def compute_elec_struct(self, zbackprop):
         self.electronic_phases = np.ones(nstates)
     if not hasattr(self, 'backprop_electronic_phases'):
         self.backprop_electronic_phases = np.ones(nstates)
-    exec("pos = self.get_" + cbackprop + "positions()")
+    pos = getattr(self, "get_" + cbackprop + "positions")()
     pos_list = pos.tolist()
 
     base_options = self.get_molcas_options()
@@ -68,17 +68,17 @@ def compute_elec_struct(self, zbackprop):
         else:
             jobiph_old = QMDIR + "/JobIph.old"
             wfnout = os.path.join(initDir, jobiph_old)
-        eval("self.get_" + cbackprop + "wfn()").tofile(wfnout)
+        getattr(self, "get_" + cbackprop + "wfn")().tofile(wfnout)
 
         inporb= QMDIR + "/INPORB"
         orbout = os.path.join(initDir, inporb)
-        eval("self.get_" + cbackprop + "inporbs()").tofile(orbout)
+        getattr(self, "get_" + cbackprop + "inporbs")().tofile(orbout)
         zolaps = True
     else:
         zolaps = False
         # check INPORB exists
         if not os.path.exists("INPORB"):
-            print "Error: INPORB file not found. Please provide an initial guess for propagation.\n"
+            print("Error: INPORB file not found. Please provide an initial guess for propagation.\n")
             sys.exit(1)
         if not os.path.exists(QMDIR):
             os.makedirs(QMDIR)
@@ -122,36 +122,34 @@ def compute_elec_struct(self, zbackprop):
     else:
         wfnfile = os.path.join(workdir, "JobIph")
     
-    exec("self.set_" + cbackprop + "wfn(np.fromfile(wfnfile))")
+    getattr(self, "set_" + cbackprop + "wfn")(np.fromfile(wfnfile))
 
     orbfilename = "RasOrb"
-    exec("self.set_" + cbackprop + "inporbs(np.fromfile(orbfilename))")
+    getattr(self, "set_" + cbackprop + "inporbs")(np.fromfile(orbfilename))
 
 
     f = np.zeros((nstates, self.numdims))
     f[self.istate, :] = -1.0 * results['gradient'].flatten()
 
-    exec("self.set_" + cbackprop + "energies(e)")
-    exec("self.set_" + cbackprop + "forces(f)")
+    getattr(self, "set_" + cbackprop + "energies")(e)
+    getattr(self, "set_" + cbackprop + "forces")(f)
 
     if zolaps:
         S = output.get_overlap()
 
         for jstate in range(nstates):
-            S[:, jstate] *= eval("self.get_" + cbackprop +
-                                 "electronic_phases()[jstate]")
-            S[jstate, :] *= eval("self.get_" + cbackprop +
-                                 "electronic_phases()[jstate]")
+            S[:, jstate] *= getattr(self, "get_" + cbackprop + "electronic_phases")()[jstate]
+            S[jstate, :] *= getattr(self, "get_" + cbackprop + "electronic_phases")()[jstate]
 
         for jstate in range(nstates):
             if S[jstate, jstate] < 0.0:
-                ep = eval("self.get_" + cbackprop + "electronic_phases()")
+                ep = getattr(self, "get_" + cbackprop + "electronic_phases")()
                 ep[jstate] *= -1.0
-                exec("self.set_" + cbackprop + "electronic_phases(ep)")
+                getattr(self, "set_" + cbackprop + "electronic_phases")(ep)
                 # I'm not sure if this line is right, but it seems to be working
                 S[jstate, :] *= -1.0
 
-        exec("self.set_" + cbackprop + "S_elec_flat(S.flatten())")
+        getattr(self, "set_" + cbackprop + "S_elec_flat")(S.flatten())
 
         W = np.zeros((2, 2))
         W[0, 0] = S[istate, istate]
@@ -168,12 +166,11 @@ def compute_elec_struct(self, zbackprop):
                  
                 tdc[jstate] = self.compute_tdc(W)
 
-        exec("self.set_" + cbackprop + "timederivcoups(tdc)")
+        getattr(self, "set_" + cbackprop + "timederivcoups")(tdc)
     else:
-        exec("self.set_" + cbackprop +
-             "timederivcoups(np.zeros(self.numstates))")
+        getattr(self, "set_" + cbackprop + "timederivcoups")(np.zeros(self.numstates))
 
-    exec("self.set_" + cbackprop + "prev_wf_positions(pos)")
+    getattr(self, "set_" + cbackprop + "prev_wf_positions")(pos)
    
     os.chdir(initDir)
     shutil.rmtree(QMDIR)

@@ -4,6 +4,13 @@ import h5py
 import numpy as np
 from typing import Dict, Any
 
+# Python 2 compatibility shims
+try:
+    unicode  # type: ignore[name-defined]
+except NameError:  # pragma: no cover
+    unicode = str  # type: ignore[assignment]
+
+
 
 class fafile(object):
     """A class from which all fms classes should be derived.
@@ -17,7 +24,7 @@ class fafile(object):
         self.datasets = {}
         self.h5file = h5py.File(h5filename, "r")
         self.read_step_mapping()
-        self.labels = self.h5file["sim"].attrs["labels"]
+        self.labels = self.decode_bytes_array(self.h5file["sim"].attrs["labels"])
         self.istates = self.h5file["sim"].attrs["istates"]
         self.numstates = self.h5file['traj_00'].attrs["numstates"]
         self.retrieve_num_traj_qm()
@@ -26,6 +33,32 @@ class fafile(object):
         self.num_traj = len(self.datasets["qm_amplitudes"][0][:])
         self.fill_S()
         self.fill_traj_time()
+
+
+    @staticmethod
+    def _to_str(x):
+        """Convert HDF5 / numpy scalar / bytes to a Python str."""
+        if isinstance(x, str):
+            return x
+        if isinstance(x, (bytes, bytearray)):
+            return x.decode("utf-8")
+        try:
+            import numpy as _np
+            if isinstance(x, _np.bytes_):
+                return x.decode("utf-8")
+            if isinstance(x, _np.generic):
+                # numpy scalars
+                return str(x.item())
+        except Exception:
+            pass
+        return str(x)
+
+    def decode_bytes_array(self, arr):
+        """Decode an array-like of labels that may be bytes / numpy.bytes_."""
+        try:
+            return [self._to_str(x) for x in arr]
+        except Exception:
+            return [self._to_str(arr)]
 
     def __del__(self):
         self.h5file.close()
@@ -58,7 +91,8 @@ class fafile(object):
 
         istates_dict = dict()
         for key in self.labels:
-            istates_dict[key] = self.h5file['traj_' + key].attrs["istate"]
+            key = self._to_str(key)
+            istates_dict[self._to_str(key)] = self.h5file['traj_' + key].attrs["istate"]
         self.datasets["istates_dict"] = istates_dict
 
     def fill_labels(self):
@@ -111,7 +145,8 @@ class fafile(object):
 
     def fill_traj_time(self):
         for key in self.labels:
-            trajgrp = "traj_" + key
+            key = self._to_str(key)
+            trajgrp = "traj_" + self._to_str(key)
             time = self.h5file[trajgrp]['time'][()]
             key2 = key + "_time"
             self.datasets[key2] = time
@@ -151,7 +186,7 @@ class fafile(object):
 
     def list_datasets(self):
         for key in self.datasets:
-            print key
+            print(key)
 
     def write_columnar_data_file(self, times, dsets, filename):
         """Subroutine to write to text files. Currently outputs in scientific notation
@@ -265,7 +300,7 @@ class fafile(object):
         """Prints out state populations for every trajectory"""
 
         for key in self.labels:
-
+            key = self._to_str(key)
             pop = self.get_traj_data_from_h5(key, "populations")
             dset_pop = key + "_pop"
             self.datasets[dset_pop] = pop
@@ -289,7 +324,7 @@ class fafile(object):
         ds = grp["labels_this_step"][()]
         for entry in ds:
             s = self.decode_bytes(entry)
-            s = str(s) if not isinstance(s, (str, unicode)) else s
+            s = self._to_str(s)
             if s.strip() == "":
                 rows.append([])
             else:
@@ -520,11 +555,11 @@ class fafile(object):
             ntimes = self.get_traj_num_times(key)
             pos = self.get_traj_data_from_h5(key, "positions")
             pos /= 1.8897161646321
-            npos = pos.size / ntimes
-            natoms = npos/3
+            npos = int(pos.size // int(ntimes))
+            natoms = int(npos // 3)
             atoms = self.get_traj_attr_from_h5(key, "atoms")
 
-            filename = "traj_" + key + ".xyz"
+            filename = "traj_" + self._to_str(key) + ".xyz"
             of = open(filename, "w")
 
             for itime in range(ntimes):
@@ -545,7 +580,7 @@ class fafile(object):
         traj_keys = self.all_traj_labels()
         for key in traj_keys:
             try:
-                grp = self.h5file["traj_" + key]
+                grp = self.h5file["traj_" + self._to_str(key)]
                 time = grp["time"][()]
                 mom  = grp["momenta"][()]
                 ener = grp["energies"][()]
@@ -613,7 +648,7 @@ class fafile(object):
     
             except Exception as e:
                 try:
-                    print "Skipping trajectory %s due to error: %s" % (key, str(e))
+                    print("Skipping trajectory %s due to error: %s") % (key, str(e))
                 except Exception:
                     pass
                                                                                                    
@@ -630,12 +665,12 @@ class fafile(object):
         for key in labels:
             ntimes = self.get_traj_num_times(key)
             pos = self.get_traj_data_from_h5(key, "positions")
-            nbonds = bonds.size / 2
+            nbonds = int(bonds.size // 2)
 
-            d = np.zeros((ntimes, nbonds))
+            d = np.zeros((int(ntimes), int(nbonds)))
 
             for itime in range(ntimes):
-                for ibond in range(nbonds):
+                for ibond in range(int(nbonds)):
                     ipos = 3*bonds[ibond, 0]
                     jpos = 3*bonds[ibond, 1]
                     ri = pos[itime, ipos:(ipos+3)]
@@ -662,12 +697,12 @@ class fafile(object):
         for key in labels:
             ntimes = self.get_traj_num_times(key)
             pos = self.get_traj_data_from_h5(key, "positions")
-            nangles = angles.size / 3
+            nangles = int(angles.size // 3)
 
-            ang = np.zeros((ntimes, nangles))
+            ang = np.zeros((int(ntimes), int(nangles)))
 
             for itime in range(ntimes):
-                for iang in range(nangles):
+                for iang in range(int(nangles)):
                     ipos = 3*angles[iang, 0]
                     jpos = 3*angles[iang, 1]
                     kpos = 3*angles[iang, 2]
@@ -707,12 +742,12 @@ class fafile(object):
         for key in labels:
             ntimes = self.get_traj_num_times(key)
             pos = self.get_traj_data_from_h5(key, "positions")
-            ndiheds = diheds.size / 4
+            ndiheds = int(diheds.size // 4)
 
-            dih = np.zeros((ntimes, ndiheds))
+            dih = np.zeros((int(ntimes), int(ndiheds)))
 
             for itime in range(ntimes):
-                for idih in range(ndiheds):
+                for idih in range(int(ndiheds)):
                     ipos = 3*diheds[idih, 0]
                     jpos = 3*diheds[idih, 1]
                     kpos = 3*diheds[idih, 2]
@@ -759,12 +794,12 @@ class fafile(object):
         for key in labels:
             ntimes = self.get_traj_num_times(key)
             pos = self.get_traj_data_from_h5(key, "positions")
-            ntwists = twists.size / 6
+            ntwists = int(twists.size // 6)
 
-            twi = np.zeros((ntimes, ntwists))
+            twi = np.zeros((int(ntimes), int(ntwists)))
 
             for itime in range(ntimes):
-                for itwi in range(ntwists):
+                for itwi in range(int(ntwists)):
                     ipos = 3*twists[itwi, 0]
                     jpos = 3*twists[itwi, 1]
                     kpos = 3*twists[itwi, 2]
@@ -814,12 +849,12 @@ class fafile(object):
         for key in labels:
             ntimes = self.get_traj_num_times(key)
             pos = self.get_traj_data_from_h5(key, "positions")
-            npyrs = pyrs.size / 4
+            npyrs = int(pyrs.size // 4)
 
-            pyr = np.zeros((ntimes, npyrs))
+            pyr = np.zeros((int(ntimes), int(npyrs)))
 
             for itime in range(ntimes):
-                for ipyr in range(npyrs):
+                for ipyr in range(int(npyrs)):
                     ipos = 3*pyrs[ipyr, 0]
                     jpos = 3*pyrs[ipyr, 1]
                     kpos = 3*pyrs[ipyr, 2]
@@ -843,8 +878,7 @@ class fafile(object):
 
                     dot = np.sum(rikil * rij)
 
-                    pyr[itime, ipyr] =\
-                        math.asin(math.fabs(dot)) / math.pi * 180.0
+                    pyr[itime, ipyr] = math.asin(math.fabs(dot)) / math.pi * 180.0
 
             dset_pyrs = key + "_pyrs"
 
@@ -902,7 +936,7 @@ class fafile(object):
     
             except Exception as e:
                 try:
-                    print "Skipping TDC for %s due to error: %s" % (key, str(e))
+                    print("Skipping TDC for %s due to error: %s") % (key, str(e))
                 except Exception:
                     pass
     

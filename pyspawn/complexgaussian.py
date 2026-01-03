@@ -8,8 +8,8 @@ import types
 
 import numpy as np
 
-from pyspawn.fmsobj import fmsobj
-from pyspawn.traj import traj
+from .fmsobj import fmsobj
+from .traj import traj
 
 # compute the overlap of two vibronic TBFs (electronic part included)
 def overlap_nuc_elec(ti, tj, positions_i="positions", positions_j="positions", momenta_i="momenta",
@@ -24,19 +24,19 @@ def overlap_nuc_elec(ti, tj, positions_i="positions", positions_j="positions", m
 
 # compute the overlap of two nuclear TBFs (electronic part not included)
 def overlap_nuc(ti, tj, positions_i="positions", positions_j="positions", momenta_i="momenta", momenta_j="momenta"):
-    if isinstance(positions_i, types.StringTypes):
+    if isinstance(positions_i, str):
         ri = eval("ti.get_" + positions_i + "()")
     else:
         ri = positions_i
-    if isinstance(positions_j, types.StringTypes):
+    if isinstance(positions_j, str):
         rj = eval("tj.get_" + positions_j + "()")
     else:
         rj = positions_j
-    if isinstance(momenta_i, types.StringTypes):
+    if isinstance(momenta_i, str):
         pi = eval("ti.get_" + momenta_i + "()")
     else:
         pi = momenta_i
-    if isinstance(momenta_j, types.StringTypes):
+    if isinstance(momenta_j, str):
         pj = eval("tj.get_" + momenta_j + "()")
     else:
         pj = momenta_j
@@ -100,13 +100,13 @@ def kinetic_nuc(ti, tj, positions_i="positions", positions_j="positions", moment
     Tij = 0.0
     for idim in range(ndim):
         Ttmp = T1D[idim]
-        # print "T1D[idim] ", T1D[idim], Ttmp
+        # print("T1D[idim] "), T1D[idim], Ttmp
         for jdim in range(ndim):
             if jdim != idim:
                 Ttmp *= S1D[jdim]
-                # print "S1D[jdim]", S1D[jdim], Ttmp
+                # print("S1D[jdim]"), S1D[jdim], Ttmp
         Tij += Ttmp
-        # print "Tij ", Tij
+        # print("Tij "), Tij
 
     return Tij
 

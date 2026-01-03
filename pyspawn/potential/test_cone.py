@@ -30,7 +30,7 @@ def compute_elec_struct(self, zbackprop):
     e = np.zeros(self.numstates)
     e[0] = (r - 1.0) * (r - 1.0) - 1.0
     e[1] = (r + 1.0) * (r + 1.0) - 1.0
-    exec ("self.set_" + cbackprop + "energies(e)")
+    getattr(self, "set_" + cbackprop + "energies")(e)
 
     f = np.zeros((self.numstates, self.numdims))
     ftmp = -2.0 * (r - 1.0)
@@ -39,14 +39,14 @@ def compute_elec_struct(self, zbackprop):
     ftmp = -2.0 * (r + 1.0)
     f[1, 0] = (x / r) * ftmp
     f[1, 1] = (y / r) * ftmp
-    exec ("self.set_" + cbackprop + "forces(f)")
+    getattr(self, "set_" + cbackprop + "forces")(f)
 
     wf = np.zeros((self.numstates, self.length_wf))
     wf[0, 0] = math.sin(theta)
     wf[0, 1] = math.cos(theta)
     wf[1, 0] = math.cos(theta)
     wf[1, 1] = -math.sin(theta)
-    exec ("prev_wf = self.get_" + cbackprop + "prev_wf()")
+    prev_wf = getattr(self, "get_" + cbackprop + "prev_wf")()
     # phasing wave funciton to match previous time step
     W = np.matmul(prev_wf, wf.T)
     if W[0, 0] < 0.0:
@@ -63,9 +63,9 @@ def compute_elec_struct(self, zbackprop):
     else:
         jstate = 1
     tdc[jstate] = tmp
-    exec ("self.set_" + cbackprop + "timederivcoups(tdc)")
+    getattr(self, "set_" + cbackprop + "timederivcoups")(tdc)
 
-    exec ("self.set_" + cbackprop + "wf(wf)")
+    getattr(self, "set_" + cbackprop + "wf")(wf)
 
 
 def init_h5_datasets(self):

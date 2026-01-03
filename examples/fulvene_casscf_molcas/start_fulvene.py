@@ -69,8 +69,8 @@ molcas_options = {
     "castargetmult": 1,
     "cas_energy_states": [0, 1],
     "cas_energy_mults": [1, 1],
-    "python3" : ## ADD the path to python 3 
-    "project": 'fulvene_test'
+    "python3": "",  # ADD the path to python 3
+    "project": "fulvene_test",
     }
 
 # trajectory parameters

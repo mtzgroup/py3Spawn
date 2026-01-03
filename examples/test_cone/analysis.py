@@ -154,4 +154,4 @@ plot_energies(labels, nstates, istates, colors, linestyles, xlimits, ylimits)
 plot_total_energies(time, toten, labels)
 plot_nuclear_populations(ntraj, linestyles, an.datasets["labels"], markers)
 
-print "\nDone"
+print("\nDone")

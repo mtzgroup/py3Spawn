@@ -38,7 +38,7 @@ def process_geometry(geom_file='geometry.xyz'):
 
 #
 # number_of_atoms, names, coordinates, comm = process_geometry('geometry.xyz')
-# print 'number of atoms:', number_of_atoms
-# print 'atom_names', names
-# print "coordinates:\n", coordinates
-# print "comment =", comm
+# print('number of atoms:'), number_of_atoms
+# print('atom_names'), names
+# print("coordinates:\n"), coordinates
+# print("comment ="), comm
