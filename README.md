@@ -116,6 +116,18 @@ pySpawn currently provides interfaces to:
 
 These interfaces require separate installation and configuration of the corresponding electronic structure software.
 
+
+TeraChem Note
+-------------
+
+The TeraChem interface requires the **TCPB (TeraChem Protocol Buffer)** Python package, which provides client–server communication with the TeraChem engine. TCPB must be installed separately and made available in the Python environment used to run pySpawn.
+
+TCPB can be installed using `pip`, for example:
+
+    python3 -m pip install tcpb --target=/path/to/tcpbpy3
+
+After installation, ensure that the target directory is included in your `PYTHONPATH` so that pySpawn can locate the TCPB package at runtime. When using the TeraChem interface, TeraChem must be launched in persistent server mode and configured to listen on the appropriate port.
+
 ---
 
 Contact

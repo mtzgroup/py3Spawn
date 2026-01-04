@@ -1,9 +1,15 @@
 import math
 import numpy as np
+import time
 try:
-    from tcpb.tcpb import TCProtobufClient
+    # New Python 3 tcpb client (version >= 0.7.0)
+    from tcpb import TCProtobufClient
 except ImportError:
-    pass
+    try:
+        # Fallback to old import path (version 0.6.0)
+        from tcpb.clients import TCProtobufClient
+    except ImportError:
+        pass
 import os
 
 #################################################
@@ -18,10 +24,16 @@ import os
 #    trajectories and centroids are spawned.
 #    other ancillary routines may be included as well
 
+# Timeout for TeraChem server communication (in seconds)
+TC_TIMEOUT = 300
+
+# Small delay between TC calls to prevent race conditions (in seconds)
+TC_DELAY = 0.5
+
 
 def compute_elec_struct(self, zbackprop):
     """Subroutine that calls electronic structure calculation in Terachem
-    through tcpb interface. This version is compatible with tcpb-0.5.0
+    through tcpb interface. This version is compatible with tcpb Python 3 client.
     When running multiple job on the same server we need to make sure we use
     different ports for Terachem server. Every trajectory or centroid
     has a port variable, which is passed along to children.
@@ -44,6 +56,7 @@ def compute_elec_struct(self, zbackprop):
     pos = getattr(self, "get_" + cbackprop + "positions")()
     pos_list = pos.tolist()
 
+    # Create TC client
     TC = TCProtobufClient(host='localhost', port=self.tc_port)
 
     base_options = self.get_tc_options()
@@ -52,13 +65,14 @@ def compute_elec_struct(self, zbackprop):
 
     options["castarget"] = istate
 
-#     TC.update_options(**base_options)
-
     TC.connect()
+    
+    # Set timeout on socket after connection to prevent timeout errors
+    if hasattr(TC, 'tcsock') and TC.tcsock is not None:
+        TC.tcsock.settimeout(TC_TIMEOUT)
 
     # Check if the server is available
     avail = TC.is_available()
-#     print("TCPB Server available: {}").format(avail)
 
     # Write CI vectors and orbitals for initial guess and overlaps
     cwd = os.getcwd()
@@ -71,8 +85,6 @@ def compute_elec_struct(self, zbackprop):
         n = int(math.floor(math.sqrt(self.get_norbs())))
         ((np.resize(getattr(self, "get_" + cbackprop + "orbs")(),
                     (n, n)).T).flatten()).tofile(orbout_t)
-#         print("old civecs"), getattr(self, "get_" + cbackprop + "civecs")()
-#         print("old orbs"), getattr(self, "get_" + cbackprop + "orbs")()
         zolaps = True
         if ("casscf" in self.tc_options):
             if (self.tc_options["casscf"] == "yes"):
@@ -93,20 +105,18 @@ def compute_elec_struct(self, zbackprop):
     # here we call TC once for energies and once for the gradient
     # will eventually be replaced by a more efficient interface
     results = TC.compute_job_sync("energy", pos_list, "bohr", **options)
-#     print results
 
     e = np.zeros(nstates)
     e = results['energy']
-#    e[:] = results['energy'][:]
+
+    # Small delay to prevent race condition between energy and gradient calls
+    time.sleep(TC_DELAY)
 
     results = TC.compute_job_sync("gradient", pos_list, "bohr", **options)
-#     print results
 
     civecfilename = os.path.join(results['job_scr_dir'], "CIvecs.Singlet.dat")
     getattr(self, "set_" + cbackprop + "civecs")(np.fromfile(civecfilename))
-#     print("new civecs"), self.civecs
 
-#     orbfilename = os.path.join(results['job_scr_dir'], "c0")
     orbfilename = results['orbfile']
     getattr(self, "set_" + cbackprop + "orbs")((np.fromfile(orbfilename)).flatten())
 
@@ -115,36 +125,24 @@ def compute_elec_struct(self, zbackprop):
     # BGL transpose hack is temporary
     n = int(math.floor(math.sqrt(self.get_norbs())))
     clastchar = orbfilename.strip()[-1]
-#     print("n"), n
-#     print("clastchar"), clastchar
     if clastchar != '0':
         tmporbs = getattr(self, "get_" + cbackprop + "orbs")()
         getattr(self, "set_" + cbackprop + "orbs")(((tmporbs.reshape((n,n))).T).flatten())
     # end transpose hack
 
-#     print("new orbs"), getattr(self, "get_" + cbackprop + "orbs")()
     orbout2 = os.path.join(cwd, "c0.new")
     getattr(self, "get_" + cbackprop + "orbs")().tofile(orbout2)
 
     self.set_ncivecs(self.get_civecs().size)
 
     f = np.zeros((nstates, self.numdims))
-#     print("results['gradient'] "), results['gradient']
-#     print("results['gradient'].flatten() "), results['gradient'].flatten()
     f[self.istate, :] = -1.0 * results['gradient'].flatten()
 
     getattr(self, "set_" + cbackprop + "energies")(e)
     getattr(self, "set_" + cbackprop + "forces")(f)
 
-    # if False:
     if zolaps:
         pos2 = getattr(self, "get_" + cbackprop + "prev_wf_positions_in_angstrom")()
-#         print('pos2.tolist()'), pos2.tolist()
-#         print('civecfilename'), civecfilename
-#         print('civecout'), civecout
-#         print('orbfilename'), orbfilename
-#         print('orbout2'), orbout2
-#         print('orbout'), orbout
         options = base_options
 
         options["geom2"] = pos2.tolist()
@@ -153,12 +151,12 @@ def compute_elec_struct(self, zbackprop):
         options["orb1afile"] = orbout2
         options["orb2afile"] = orbout
 
-#         print('pos_list'), pos_list
+        # Small delay before overlap calculation
+        time.sleep(TC_DELAY)
+
         results2 = TC.compute_job_sync("ci_vec_overlap", pos_list,
                                        "bohr", **options)
-#         print("results2"), results2
         S = results2['ci_overlap']
-#         print("S before phasing "), S
 
         # phasing electronic overlaps
         for jstate in range(nstates):
@@ -173,7 +171,6 @@ def compute_elec_struct(self, zbackprop):
                 # I'm not sure if this line is right, but it seems to be working
                 S[jstate, :] *= -1.0
 
-#         print("S"), S
         getattr(self, "set_" + cbackprop + "S_elec_flat")(S.flatten())
 
         W = np.zeros((2, 2))
@@ -189,17 +186,7 @@ def compute_elec_struct(self, zbackprop):
                 W[0,1] = S[istate,jstate]
                 W[1,1] = S[jstate,jstate]
                 tdc[jstate] = self.compute_tdc(W)
-#                 print("tdc"), tdc[jstate]
 
-#         tmp=self.compute_tdc(W)
-#         tdc = np.zeros(self.numstates)
-#         if self.istate == 1:
-#             jstate = 0
-#         else:
-#             jstate = 1
-#             tdc[jstate] = tmp
-#
-#         print("tdc2 "), tdc
         getattr(self, "set_" + cbackprop + "timederivcoups")(tdc)
     else:
         getattr(self, "set_" + cbackprop + "timederivcoups")(np.zeros(self.numstates))
@@ -208,6 +195,7 @@ def compute_elec_struct(self, zbackprop):
 
 
 def compute_electronic_overlap(self, pos1, civec1, orbs1, pos2, civec2, orbs2):
+    cwd = os.getcwd()
     orbout1 = os.path.join(cwd, "c0.1")
     orbs1.tofile(orbout1)
     orbout2 = os.path.join(cwd, "c0.2")
@@ -218,18 +206,23 @@ def compute_electronic_overlap(self, pos1, civec1, orbs1, pos2, civec2, orbs2):
     civecout2 = os.path.join(cwd, "civec.2")
     civec2.tofile(civecout2)
 
+    # Create TC client
     TC = TCProtobufClient(host='localhost', port=self.tc_port)
     options = self.get_tc_options()
-#     TC.update_options(**base_options)
     TC.connect()
+    
+    # Set timeout on socket after connection to prevent timeout errors
+    if hasattr(TC, 'tcsock') and TC.tcsock is not None:
+        TC.tcsock.settimeout(TC_TIMEOUT)
+    
     # Check if the server is available
     avail = TC.is_available()
 
     options["geom2"] = (0.529177 * pos2).tolist()
-    options["cvec1file"] = civecfilename
-    options["cvec2file"] = civecout
-    options["orb1afile"] = orbout2
-    options["orb2afile"] = orbout
+    options["cvec1file"] = civecout1
+    options["cvec2file"] = civecout2
+    options["orb1afile"] = orbout1
+    options["orb2afile"] = orbout2
 
     results2 = TC.compute_job_sync("ci_vec_overlap", pos1.tolist(),
                                    "bohr", **options)

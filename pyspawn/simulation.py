@@ -682,9 +682,15 @@ class simulation(fmsobj):
             backprop_time = self.centroids[key].get_backprop_time() - timestep
             if (self.centroids[key].get_mintime()-1.0e-6) < backprop_time:
                 backprop_time1 = self.traj[key1].get_backprop_time()
-                if (backprop_time > backprop_time1 - 1.0e-6) and (backprop_time1  < (self.traj[key1].get_firsttime() - 1.0e-6) or backprop_time1  < (self.traj[key1].get_mintime() + 1.0e-6)):
+                if (
+                    (backprop_time > backprop_time1 - 1.0e-6) and (backprop_time1  < (self.traj[key1].get_firsttime() - 1.0e-6) 
+                    or backprop_time1  < (self.traj[key1].get_mintime() + 1.0e-6))
+                    ):
                     backprop_time2 = self.traj[key2].get_backprop_time()
-                    if (backprop_time > backprop_time2 - 1.0e-6) and (backprop_time2  < (self.traj[key2].get_firsttime() - 1.0e-6) or backprop_time2  < (self.traj[key2].get_mintime() + 1.0e-6)):
+                    if (
+                        (backprop_time > backprop_time2 - 1.0e-6) and (backprop_time2  < (self.traj[key2].get_firsttime() - 1.0e-6) 
+                         or backprop_time2  < (self.traj[key2].get_mintime() + 1.0e-6))
+                         ):
                         time1 = self.traj[key1].get_time()
                         time2 = self.traj[key2].get_time()
                         # this if takes care of the special case where we try 
@@ -1138,7 +1144,7 @@ class simulation(fmsobj):
         self.ssa_steps_since_spawn = 1e9  # large so first check won't be blocked unless a spawn is detected
         self.ssa_age_in_basis = {}
         try:
-            print("SSAIMS RNG seed ="), self.ssa_seed
+            print(f"SSAIMS RNG seed = {self.ssa_seed}")
         except Exception:
             pass
 
@@ -1435,7 +1441,11 @@ class simulation(fmsobj):
                 else:
                     P_keep_mature = None
         
-                print("    keep_idx(mature):", (keep_idx if 'keep_idx' in locals() else None), "   keep_size(mature):", (len(keep_comp_mature) if 'keep_comp_mature' in locals() else None), "   P_keep(mature):", (P_keep_mature if P_keep_mature is not None else 'n/a'))
+                print(
+                    "    keep_idx(mature):", (keep_idx if 'keep_idx' in locals() else None), 
+                    "   keep_size(mature):", (len(keep_comp_mature) if 'keep_comp_mature' in locals() else None), 
+                    "   P_keep(mature):", (P_keep_mature if P_keep_mature is not None else 'n/a')
+                    )
                 print("    keep_size(final):", (len(keep_all) if 'keep_all' in locals() else len(keep_set_mature)))
                 print("    removing_labels:", to_remove)        
                 # Spawn status
