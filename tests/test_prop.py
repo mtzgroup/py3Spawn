@@ -7,8 +7,6 @@ pyspawn.import_methods.into_simulation(pyspawn.qm_hamiltonian.adiabatic)
 pyspawn.import_methods.into_traj(pyspawn.potential.test_cone)
 pyspawn.import_methods.into_traj(pyspawn.classical_integrator.vv)
     
-traj1 = pyspawn.traj()
-
 t0 = 0.0
 
 timestep = 0.02
@@ -20,6 +18,9 @@ ndims = 2
 nstates = 2
 
 istate = 1
+
+# traj ctor now takes (numdims, numstates) after the Py3 migration
+traj1 = pyspawn.traj(ndims, nstates)
 
 pos = np.random.normal(0.0,1.0,ndims)
 

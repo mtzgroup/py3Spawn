@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# pyspawn run artifacts
+sim.json
+sim.hdf5
+sim.*.json
+sim.*.hdf5
+working.hdf5
+*.dat
+N.png

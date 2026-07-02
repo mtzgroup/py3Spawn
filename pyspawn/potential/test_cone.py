@@ -20,10 +20,15 @@ def compute_elec_struct(self, zbackprop):
     else:
         cbackprop = "backprop_"
 
-    exec ("self.set_" + cbackprop + "prev_wf(self.get_" + cbackprop + "wf())")
+    # Py3: exec() no longer writes into function locals, so the old
+    # exec("x = ...") pattern silently failed with NameError. Use explicit
+    # getattr-based dispatch instead (matches the rest of this function).
+    getattr(self, "set_" + cbackprop + "prev_wf")(
+        getattr(self, "get_" + cbackprop + "wf")())
 
-    exec ("x = self.get_" + cbackprop + "positions()[0]")
-    exec ("y = self.get_" + cbackprop + "positions()[1]")
+    pos = getattr(self, "get_" + cbackprop + "positions")()
+    x = pos[0]
+    y = pos[1]
     r = math.sqrt(x * x + y * y)
     theta = (math.atan2(y, x)) / 2.0
 
