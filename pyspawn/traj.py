@@ -8,6 +8,11 @@ import h5py
 class traj(fmsobj):
     """Trajectory objects contain individual trajectory basis functions"""
 
+    #: electronic-structure backend (ElectronicStructureBackend), selected by
+    #: import_methods.into_traj(). Class-level so it is shared by all traj/
+    #: centroid instances and re-established on restart (it is not serialized).
+    _es_backend = None
+
     def __init__(self, numdims, numstates):
         self.time = 0.0
         self.time_half_step = 0.0
@@ -779,10 +784,19 @@ class traj(fmsobj):
     def get_z_compute_me_backprop(self):
         return self.z_compute_me_backprop
 
-    #    def compute_elec_struct(self, zbackprop):
-    #        tmp = "self.compute_elec_struct_" + self.get_software() + "_"\
-    #            + self.get_method() + "(zbackprop)"
-    #        eval(tmp)
+    def compute_elec_struct(self, zbackprop=False):
+        """Electronic-structure seam (PR1).
+
+        Reads serially: ask the selected backend for one result and apply it.
+        Backend selection lives in the registry (import_methods.into_traj /
+        potential/es_backend.py); this method is no longer monkeypatched onto
+        the class per-backend. Callers (the vv integrator, compute_centroid,
+        hessian) are unchanged -- they still call self.compute_elec_struct(...)
+        and read the results back through the usual getters.
+        """
+        backend = self._es_backend
+        result = backend.compute_one(self, zbackprop)
+        backend.apply_to_traj(result, self, zbackprop)
 
     def propagate_step(self, zbackprop=False):
         """Performs classical propagation for one step"""
