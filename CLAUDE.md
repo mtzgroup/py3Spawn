@@ -104,10 +104,17 @@ finding, and it means the seam mostly *exists* and PR1 is smaller than feared:
   `pyspawn.import_methods.into_traj(pyspawn.potential.terachem_cas)` to select a
   backend. (The same `exec`-injection wires the classical integrator, QM
   Hamiltonian, and QM integrator — see `into_simulation`.)
-- At runtime the loop reaches it through `traj.propagate_step()` →
-  **`self.compute_elec_struct(zbackprop)`** (`traj.py` ~line 818). The real
-  definitions live in the backends; the version at `traj.py` ~782 is commented
-  out.
+- At runtime the ES call is `self.compute_elec_struct(zbackprop)`. **Correction
+  (verified while doing PR1): it is NOT called from `propagate_step`.** Its live
+  callers are the *injected* velocity-Verlet integrator
+  `classical_integrator/vv.py` (×3: `prop_first_step` at `x_t` and `x_tpdt`,
+  `prop_not_first_step` once), `traj.compute_centroid` (`traj.py` ~line 818), and
+  `hessian.py` (×3). So the classical+ES fusion lives in the injected `vv.py`
+  integrator, not in `traj.py`. Each caller does `compute_elec_struct` then reads
+  `forces_i`/`energies` straight back via getters — the "mutate `self`, re-read
+  via getter" pattern the `ESResult` seam replaces. (`traj.py` ~782 used to hold
+  a commented-out `eval`-string dispatcher; PR1 replaced it with a native
+  `compute_elec_struct` shim over the backend registry.)
 
 **Seam verdict:** PR1 is *"formalize a seam that already exists."* The backends
 are already the right granularity — the work is to replace the `exec`-monkeypatch
@@ -115,8 +122,9 @@ injection with a clean interface (a registry or an `ElectronicStructureBackend`
 base class the backends subclass), and to change the contract so
 `compute_elec_struct` **returns an `ESResult`** rather than mutating `self` in
 place. Two things to untangle in the process: (a) it is currently fused with
-classical propagation inside `propagate_step`; separate them. (b) backend
-selection is by injection at import time; make it explicit. Map the target
+classical propagation inside the injected `vv.py` integrator (not
+`propagate_step` — see the corrected call-site note above); separate them.
+(b) backend selection is by injection at import time; make it explicit. Map the target
 contract to `design/nextfms_skeleton/nextfms/es_provider.py` (`ESRequest` / `ESResult` /
 `compute_one`, plus the `supports`/coupling-ladder pattern). Note the injection
 also covers the classical integrator and QM Hamiltonian/integrator — the same
