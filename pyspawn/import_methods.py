@@ -5,8 +5,16 @@ from .potential.es_backend import LegacyMutatingBackend
 
 def into_hessian(x):
     for method in x.__dict__:
-        if method[0] != "_":
+        # Like into_traj: don't monkeypatch the ES seam onto hessian. hessian is
+        # a traj subclass and inherits the native compute_elec_struct shim; the
+        # backend is wired below so the Hessian path goes through the registry
+        # instead of bypassing it.
+        if method[0] != "_" and method != "compute_elec_struct":
             setattr(hessian, method, getattr(x, method))
+    if hasattr(x, "BACKEND"):
+        hessian._es_backend = x.BACKEND()
+    elif "compute_elec_struct" in x.__dict__:
+        hessian._es_backend = LegacyMutatingBackend(x.compute_elec_struct)
 
 def into_traj(x):
     for method in x.__dict__:
