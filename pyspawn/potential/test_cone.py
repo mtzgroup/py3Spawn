@@ -1,7 +1,9 @@
 import math
 import numpy as np
 
-from .es_backend import ElectronicStructureBackend, ESResult, register_backend
+from .es_backend import (ElectronicStructureBackend, ESResult, ESState,
+                         register_backend)
+from ..npi_coupling import compute_npi_tdc
 
 
 #################################################
@@ -29,27 +31,21 @@ class TestConeBackend(ElectronicStructureBackend):
     max|diff|=0.
     """
 
-    def compute_one(self, traj, zbackprop):
-        if not zbackprop:
-            cbackprop = ""
-        else:
-            cbackprop = "backprop_"
+    def compute_one(self, req):
+        # the previous-step wavefunction is the opaque continuation state; the
+        # backend reads it from the request, never from a traj.
+        prev_wf = req.prior_state.wf
 
-        # the current wf becomes the previous wf (state-tracking); we read it
-        # directly instead of writing it back first, then re-reading it.
-        prev_wf = getattr(traj, "get_" + cbackprop + "wf")()
-
-        pos = getattr(traj, "get_" + cbackprop + "positions")()
-        x = pos[0]
-        y = pos[1]
+        x = req.positions[0]
+        y = req.positions[1]
         r = math.sqrt(x * x + y * y)
         theta = (math.atan2(y, x)) / 2.0
 
-        e = np.zeros(traj.numstates)
+        e = np.zeros(req.numstates)
         e[0] = (r - 1.0) * (r - 1.0) - 1.0
         e[1] = (r + 1.0) * (r + 1.0) - 1.0
 
-        f = np.zeros((traj.numstates, traj.numdims))
+        f = np.zeros((req.numstates, req.numdims))
         ftmp = -2.0 * (r - 1.0)
         f[0, 0] = (x / r) * ftmp
         f[0, 1] = (y / r) * ftmp
@@ -57,7 +53,7 @@ class TestConeBackend(ElectronicStructureBackend):
         f[1, 0] = (x / r) * ftmp
         f[1, 1] = (y / r) * ftmp
 
-        wf = np.zeros((traj.numstates, traj.length_wf))
+        wf = np.zeros((req.numstates, req.length_wf))
         wf[0, 0] = math.sin(theta)
         wf[0, 1] = math.cos(theta)
         wf[1, 0] = math.cos(theta)
@@ -70,17 +66,17 @@ class TestConeBackend(ElectronicStructureBackend):
         if W[1, 1] < 0.0:
             wf[1, :] = -1.0 * wf[1, :]
             W[:, 1] = -1.0 * W[:, 1]
-        # computing NPI derivative coupling
-        tmp = traj.compute_tdc(W)
-        tdc = np.zeros(traj.numstates)
-        if traj.istate == 1:
+        # NPI derivative coupling, via the shared traj-free kernel (PR1b step 1)
+        tmp = compute_npi_tdc(W, req.dt)
+        tdc = np.zeros(req.numstates)
+        if req.istate == 1:
             jstate = 0
         else:
             jstate = 1
         tdc[jstate] = tmp
 
         return ESResult(energies=e, forces=f, timederivcoups=tdc,
-                        wf=wf, prev_wf=prev_wf)
+                        state=ESState(wf=wf))
 
 
 #: selected by import_methods.into_traj(pyspawn.potential.test_cone)

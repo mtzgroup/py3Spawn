@@ -786,17 +786,29 @@ class traj(fmsobj):
         return self.z_compute_me_backprop
 
     def compute_elec_struct(self, zbackprop=False):
-        """Electronic-structure seam (PR1).
+        """Electronic-structure seam (PR1 / PR1b).
 
-        Reads serially: ask the selected backend for one result and apply it.
-        Backend selection lives in the registry (import_methods.into_traj /
-        potential/es_backend.py); this method is no longer monkeypatched onto
-        the class per-backend. Callers (the vv integrator, compute_centroid,
-        hessian) are unchanged -- they still call self.compute_elec_struct(...)
-        and read the results back through the usual getters.
+        Build a value ESRequest for the selected channel, hand it to the backend
+        (a migrated backend returns an ESResult without touching this traj), and
+        apply the result. Backend selection is via the registry
+        (import_methods.into_traj / potential/es_backend.py). The vv integrator,
+        compute_centroid, and hessian callers are unchanged.
         """
+        from .potential.es_backend import ESRequest, ESState
+        cb = "backprop_" if zbackprop else ""
         backend = self._es_backend
-        result = backend.compute_one(self, zbackprop)
+        request = ESRequest(
+            positions=getattr(self, "get_" + cb + "positions")(),
+            istate=self.istate,
+            numstates=self.numstates,
+            numdims=self.numdims,
+            length_wf=self.length_wf,
+            dt=self.get_timestep(),
+            prior_state=ESState(wf=getattr(self, "get_" + cb + "wf")()),
+            traj=self,
+            zbackprop=zbackprop,
+        )
+        result = backend.compute_one(request)
         backend.apply_to_traj(result, self, zbackprop)
 
     def propagate_step(self, zbackprop=False):
