@@ -166,6 +166,42 @@ PR0 is complete on the `python3` branch. What was found and done:
   (`Wlj = np.sqrt(1 - ...)` going slightly negative) in the cone NPI-coupling
   path. Pre-existing; does not affect reproducibility. Worth a guard eventually.
 
+## PR1 / PR1b status — DONE (ES seam formalized + narrowed)
+
+Done on `python3` and pushed to `origin`. The electronic-structure seam is now a
+real interface, not monkeypatch injection:
+
+- **PR1** — backend selection is a **registry**; `traj.compute_elec_struct` is a
+  native shim dispatching to `self._es_backend`; each backend is an
+  `ElectronicStructureBackend` returning an `ESResult`. QM backends flow through
+  `LegacyMutatingBackend` unchanged (cannot be validated without TeraChem).
+- **PR1b** — the seam is **narrowed to `compute_one(ESRequest) -> ESResult`**: a
+  migrated backend computes from values and never touches a `traj`. Continuation
+  state is the opaque **`ESState`** (cone: `wf`); the dead `prev_wf` attribute was
+  removed. The NPI coupling is a shared traj-free kernel
+  (`pyspawn/npi_coupling.py:compute_npi_tdc`). The **Hessian bypass is sealed**
+  (`into_hessian` wires `_es_backend` via the registry) — every ES call
+  (trajectory, centroid, Hessian) now goes through the one seam.
+- **Physics fix (flagged numeric change)** — `compute_tdc` clamped the wrong `W`
+  entries (off-diagonal tested, diagonal written → `arcsin` NaN); fixed, with
+  `tests/test_compute_tdc.py` as the gate. Inert on the cone (`W` never leaves
+  [-1,1]), so `pr0_oracle.py` is unchanged. The pre-existing `sqrt` RuntimeWarning
+  now lives in `npi_coupling.py`, not `traj.py:1052`.
+- **Fixture harness** — `pyspawn/es_record_replay.py` (+ `tests/test_es_replay.py`,
+  validated on the cone at `max|diff|=0`) turns one real QM run into a hermetic
+  replay oracle.
+
+Every step held `tests/pr0_oracle.py` at **OVERALL: PASS, max|diff|=0**. Design
+docs: `design/current_architecture.md` (as-is map), `design/es_seam_contract.md`
+(opaque-handle contract), `design/redesign_proposal.md` (target architecture +
+pressure-test log).
+
+**NEXT: capture the QM fixture** on a TeraChem machine (the one thing that needs
+TeraChem — see `design/qm_fixture_capture.md`), then use `ReplayBackend` to gate
+the QM-backend migration off `LegacyMutatingBackend` hermetically. After that:
+PR2 (centralize the PRNG) and PR3 (replace the `eval` driver / retire the `*_qm`
+bus into the executor cache).
+
 ## Staged plan (each step independently validated; do them in order)
 
 Do **not** attempt a big-bang rewrite. Each step below has its own regression
