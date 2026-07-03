@@ -56,6 +56,17 @@ Decompose into small explicit records:
 A "trajectory" becomes a thin record plus a reference to its ES chain — not ~70
 accessors — and the ES boundary stops leaking into the physics object.
 
+*Pressure-test refinement (§8.3): these three records are **not** co-equal
+targets, and this is **not** a standalone refactor. Layer 2 is the least
+separable layer — the god-object is the substrate Layers 1/3/4 all touch — so it
+must be **emergent**, dissolved one seam-driven slice at a time: `ESState` first
+(it* simplifies *spawn-copy), `*_qm` retirement next, `NuclearState`/`QuantumState`
+as facade residue last. Two hazards the naive framing misses: serialization is
+keyed to the `__dict__` schema (a decomposition passes the same-version restart
+oracle yet can break cross-version restart of an in-flight `sim.json`), and a
+delegating-accessor facade is necessary but not sufficient (~50 sites bypass
+getters). Details in §8.3.*
+
 ### Layer 3 — The driver: one AIMS step, read serially
 
 The logic currently shredded across `update_queue`/`eval` becomes a function you
@@ -233,3 +244,35 @@ explicit, where the HDF5 gather returns a wrong row.
 - **QM validation gap.** The cone oracle cannot see `S_elec`/DGAS/QM continuation
   state (§6); QM-path correctness needs a record/replay fixture captured from one
   real TeraChem run.
+
+### 8.3 "Decompose the god-object into typed records" (Layer 2) — HOLDS, but emergent only
+
+Tested against `simulation.from_dict` (`:90–146`), `init_spawn_traj` (`:451–518`),
+and a coupling census of `pyspawn/`:
+
+1. **Serialization is keyed to the `__dict__` schema and `traj`'s constructor.**
+   `from_dict` already special-cases `traj`/`centroids` to pass
+   `(numdims, numstates)` (`:129–140`, self-labelled a "hack that fixes the
+   previous hack"). Moving fields into nested records changes the `sim.json`
+   schema; the restart oracle round-trips *within one version*, so a schema change
+   **passes the oracle** yet can break cross-version restart of an in-flight run —
+   a hazard `max|diff|=0` cannot see.
+2. **A delegating-accessor facade is necessary but not sufficient.** It preserves
+   the 66 computed-name (`getattr(self,"set_"+cbackprop+…)`) calls and the 13 `cg`
+   `eval("ti.get_"+…)` selectors, but ~50 sites reach fields *directly*. Those
+   split into control/identity (`numstates/numdims/istate` — stay on the facade,
+   fine) and ES-state (`self.wf` in backend helpers — break under an `ESState`
+   move, **but live in the code PR1b rewrites anyway**).
+3. **The `backprop_` prefix is a second decomposition axis**, woven through all 66
+   computed-name calls, the spawn-copy, the `*_qm` gather, and serialization — the
+   most invasive knot, entangled with ESState (PR1b) and `*_qm` retirement (PR3).
+   Not a standalone step.
+4. **ESState *simplifies* the decomposition.** `init_spawn_traj` hard-codes 12
+   `hasattr`-guarded field copies into forward+backprop twins plus 4 per-backend
+   `potential_specific_traj_copy` hooks (`:485–515`); one opaque `ESState` handle
+   replaces all of it. Layer 2 is *pulled* by the seam, not pushed.
+
+**Conclusion:** never a standalone "split `traj`" PR (un-localizable + cross-
+version restart risk). Sequence: `ESState` (PR1b, net-simplifying) → retire `*_qm`
+(PR3) → `NuclearState`/`QuantumState` as stable-named facade residue last, each
+field-group gated by the restart oracle.
