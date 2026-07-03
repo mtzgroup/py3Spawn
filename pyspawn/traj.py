@@ -2,6 +2,7 @@ import numpy as np
 import sys
 import math
 from .fmsobj import fmsobj
+from .npi_coupling import compute_npi_tdc
 import h5py
 
 
@@ -1039,62 +1040,13 @@ class traj(fmsobj):
         h5f.close()
 
     def compute_tdc(self, Win):
-        """Computes derivative coupling matrix elements
-        using NPI"""
+        """Compute NPI derivative-coupling matrix elements.
 
-        W = Win.copy()
-        if 1.0 < W[0, 0]: # < 1.01:
-            W[0, 0] = 1.0
-        if -1.0 > W[0, 0]: # > -1.01:
-            W[0, 0] = -1.0
-        if 1.0 < W[1, 1]: # < 1.01:
-            W[1, 1] = 1.0
-        if -1.0 > W[1, 1]: # > -1.01:
-            W[1, 1] = -1.0
-        if 1.0 < W[0, 1]: # < 1.01:
-            W[0, 1] = 1.0
-        if -1.0 > W[0, 1]: # > -1.01:
-            W[0, 1] = -1.0
-        if 1.0 < W[1, 0]: # < 1.01:
-            W[1, 0] = 1.0
-        if -1.0 > W[1, 0]: # > -1.01:
-            W[1, 0] = -1.0
-        Atmp = np.arccos(W[0, 0]) - np.arcsin(W[0, 1])
-        Btmp = np.arccos(W[0, 0]) + np.arcsin(W[0, 1])
-        Ctmp = np.arccos(W[1, 1]) - np.arcsin(W[1, 0])
-        Dtmp = np.arccos(W[1, 1]) + np.arcsin(W[1, 0])
-        Wlj = np.sqrt(1 - W[0, 0] * W[0, 0] - W[1, 0] * W[1, 0])
-        if Wlj != Wlj:
-            Wlj = 0.0
-        if np.absolute(Atmp) < 1.0e-6:
-            A = -1.0
-        else:
-            A = -1.0 * np.sin(Atmp) / Atmp
-        if np.absolute(Btmp) < 1.0e-6:
-            B = 1.0
-        else:
-            B = np.sin(Btmp) / Btmp
-        if np.absolute(Ctmp) < 1.0e-6:
-            C = 1.0
-        else:
-            C = np.sin(Ctmp) / Ctmp
-        if np.absolute(Dtmp) < 1.0e-6:
-            D = 1.0
-        else:
-            D = np.sin(Dtmp) / Dtmp
-        if Wlj < 1.0e-6:
-            E = 0.0
-        else:
-            Wlk = -1.0 * (W[0, 1] * W[0, 0] + W[1, 1] * W[1, 0]) / Wlj
-            sWlj = np.sin(Wlj)
-            sWlk = np.sin(Wlk)
-            Etmp = np.sqrt((1 - Wlj * Wlj) * (1 - Wlk * Wlk))
-            denom = sWlj * sWlj - sWlk * sWlk
-            E = 2.0 * Wlj * (Wlj * Wlk * sWlj + (Etmp - 1.0) * sWlk) / denom
-        h = self.get_timestep()
-        tdc = 0.5 / h * (np.arccos(W[0, 0]) * (A + B)
-                         + np.arcsin(W[1, 0]) * (C + D) + E)
-        return tdc
+        Thin wrapper over the shared, traj-free kernel
+        ``npi_coupling.compute_npi_tdc`` (PR1b step 1): the ES backends and the
+        DGAS Hamiltonian compute coupling through the kernel, not through a traj.
+        """
+        return compute_npi_tdc(Win, self.get_timestep())
 
     def initial_wigner(self, iseed, temp=0.0):
         """Wigner distribution of positions and momenta
