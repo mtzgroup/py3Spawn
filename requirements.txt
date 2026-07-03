@@ -1,0 +1,16 @@
+# pySpawn (py3Spawn fork) Python dependencies.
+#   pip install -r requirements.txt
+# Python 3.8+ required; this fork is developed and tested under Python 3.13.
+
+numpy>=1.21        # tested: 2.5.0
+h5py>=3,<4         # tested: 3.16.0
+matplotlib>=3      # tested: 3.10.9   (analysis / plotting)
+
+# --- Optional: electronic-structure interfaces (runtime only) ---
+# The core package and the hermetic tests (tests/pr0_oracle.py,
+# tests/test_es_replay.py) need only the packages above -- `import pyspawn`
+# works without the interfaces below.
+#
+#   tcpb           # TeraChem interface; install separately (see the README
+#                  # "TeraChem Note"); also needs a running TeraChem server.
+#   OpenMolcas     # external program; no extra Python package required.

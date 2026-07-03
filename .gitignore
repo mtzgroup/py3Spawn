@@ -17,3 +17,6 @@ N.png
 design/nextfms_skeleton/fssh_*/
 design/nextfms_skeleton/run_*/
 *.pkl
+
+# machine-local Python version pin (pyenv) -- not portable across machines
+.python-version

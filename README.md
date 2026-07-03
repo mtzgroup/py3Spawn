@@ -53,8 +53,13 @@ Example jobs and partial documentation are included.
 Installation
 ============
 
-pySpawn requires Python 3.8 or newer.  
+pySpawn requires **Python 3** (3.8 or newer; this fork is developed and tested
+under Python 3.13).  
 Installation should be performed using pip inside a virtual environment to avoid dependency conflicts.
+
+The Python dependencies are listed in `requirements.txt`:
+
+    pip install -r requirements.txt
 
 Option 1. Install using a virtual environment (recommended)
 -----------------------------------------------------------
@@ -97,12 +102,15 @@ To verify:
 Dependencies
 ============
 
-pySpawn depends on the following Python packages:
+pySpawn depends on the following Python packages (see `requirements.txt`):
 
-- NumPy (>=1.21,<1.24)
+- NumPy (>=1.21; tested with 2.5)
 - h5py (>=3,<4)
+- matplotlib (>=3; analysis / plotting)
 
-The NumPy version is pinned to maintain compatibility with commonly used scientific packages such as SciPy, TensorFlow, and Numba.
+This fork is tested with NumPy 2.x and h5py 3.x under Python 3.13; the older
+NumPy upper bound noted in earlier releases is not enforced. The TeraChem and
+OpenMolcas interfaces require additional software (see below).
 
 ---
 
