@@ -12,3 +12,8 @@ sim.*.hdf5
 working.hdf5
 *.dat
 N.png
+
+# nextfms_skeleton demo scratch (crash/restart + fssh runs, cache pkls)
+design/nextfms_skeleton/fssh_*/
+design/nextfms_skeleton/run_*/
+*.pkl
