@@ -196,11 +196,32 @@ docs: `design/current_architecture.md` (as-is map), `design/es_seam_contract.md`
 (opaque-handle contract), `design/redesign_proposal.md` (target architecture +
 pressure-test log).
 
-**NEXT: capture the QM fixture** on a TeraChem machine (the one thing that needs
-TeraChem — see `design/qm_fixture_capture.md`), then use `ReplayBackend` to gate
-the QM-backend migration off `LegacyMutatingBackend` hermetically. After that:
-PR2 (centralize the PRNG) and PR3 (replace the `eval` driver / retire the `*_qm`
-bus into the executor cache).
+## QM fixture / oracle — DONE (hermetic QM gate now exists)
+
+The one TeraChem-gated step is complete (captured on a TeraChem-Clean box,
+2026-07-03). A real ethylene SA2-CASSCF(2/2) AIMS run (tfinal=500 au; it spawns,
+so the fixture covers the spawn/centroid/back-prop channels) was captured and
+replays with **no TeraChem** at `max|diff|=0`:
+
+- `examples/ethylene_fomocasci/capture_c2h4.py` — the capture script (start +
+  `RecordingBackend`). Run recipe (which TeraChem build, `protobuf/3.14.0`
+  module, the **server & client must share a CWD** rule): see the session memory
+  `terachem-capture-recipe` / `design/qm_fixture_capture.md`.
+- `tests/fixtures/qm_ethylene_fomocasci{.tape,_golden.hdf5,_hessian.hdf5}` — the
+  committed fixture (2.8 MB).
+- `tests/qm_replay_oracle.py` — hermetic gate; `ReplayBackend` reproduces the
+  golden (40 datasets, `max|diff|=0`). Needs neither TeraChem nor `tcpb`
+  (`terachem_cas` wraps its `tcpb` import in try/except).
+- **Harness fix (`es_record_replay.py`):** the real run surfaced that
+  `ES_OUTPUT_FIELDS` omitted `civecs`/`orbs` (QM writes them to the durable
+  HDF5); recorded them + rebuild `ncivecs`/`norbs` on restore. Cone gates
+  unchanged. Confirmed *not* a Py3 bug — `terachem_cas` ran clean under Py3.
+
+**NEXT: migrate the QM backends off `LegacyMutatingBackend`** to native
+`compute_one(ESRequest)` (terachem_cas/terachem_dft/molcas_cas), gated by
+`tests/qm_replay_oracle.py`; then drop the transitional `request.traj`/
+`zbackprop` escape hatch. After that: PR2 (centralize the PRNG) and PR3 (replace
+the `eval` driver / retire the `*_qm` bus into the executor cache).
 
 ## Staged plan (each step independently validated; do them in order)
 
