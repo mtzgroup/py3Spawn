@@ -13,11 +13,15 @@ the framework on a *real* QM trajectory, hermetically, so QM-touching refactors
 regression gate they otherwise lack (`current_architecture.md` section 4e:
 the cone oracle is blind to S_elec / DGAS / QM state).
 
-Why only ES outputs? The dynamics consumes ``energies, forces, timederivcoups,
+Which ES outputs? The dynamics consumes ``energies, forces, timederivcoups,
 S_elec_flat`` (and ``wf`` for the ``wf0/wf1`` log); the integrator re-derives
-positions/momenta from them (`current_architecture.md` section 4). So replaying the
-ES outputs is sufficient to reproduce the whole run -- the QM continuation state
-(orbs/civecs/phases) never needs replay because nothing is recomputed.
+positions/momenta from them (`current_architecture.md` section 4). The QM backends
+*additionally* write ``civecs``/``orbs`` (CI vectors + orbitals) to the durable
+HDF5 (``terachem_cas.init_h5_datasets``), so those are recorded too -- not because
+anything recomputes them (replay never calls QM), but so the replayed HDF5 matches
+the golden byte-for-byte. Their scalar sizes ``ncivecs``/``norbs`` are rebuilt on
+restore. The analytic cone has no civecs/orbs, so on the cone these fields are
+simply absent from the snapshot (``getattr`` -> None -> skipped).
 
 Keying: ``(label, direction, round(geometry, 10))``. Geometry is order-independent
 (so the fixture survives a driver reorder -- exactly what PR3 needs to validate),
@@ -37,8 +41,13 @@ import numpy as np
 from .potential.es_backend import ElectronicStructureBackend, ESResult
 
 #: ES output attributes the dynamics consumes (plus wf, which is logged). Their
-#: ``backprop_`` twins are handled via the channel prefix.
-ES_OUTPUT_FIELDS = ("energies", "forces", "timederivcoups", "S_elec_flat", "wf")
+#: ``backprop_`` twins are handled via the channel prefix. ``civecs``/``orbs`` are
+#: QM continuation state (absent on the analytic cone), but the QM backends write
+#: them to the durable HDF5 (``terachem_cas.init_h5_datasets``), so the tape must
+#: carry them for a byte-for-byte replay; ``_restore`` rebuilds the derived scalar
+#: sizes ``ncivecs``/``norbs`` those datasets are shaped by.
+ES_OUTPUT_FIELDS = ("energies", "forces", "timederivcoups", "S_elec_flat", "wf",
+                    "civecs", "orbs")
 
 _DECIMALS = 10
 
@@ -64,6 +73,14 @@ def _snapshot(traj, zbackprop):
 def _restore(traj, snap):
     for attr, val in snap.items():
         setattr(traj, attr, np.asarray(val).copy())
+    # QM backends size their civecs/orbs HDF5 datasets from the scalar
+    # ncivecs/norbs, which the real backend derives from the array sizes during
+    # compute (terachem_cas set_ncivecs/set_norbs). Reproduce those scalars so
+    # init_h5_datasets() works when the arrays are supplied from the tape.
+    for arr_name, n_name in (("civecs", "ncivecs"), ("orbs", "norbs")):
+        for attr, val in snap.items():
+            if attr.endswith(arr_name):
+                setattr(traj, n_name, int(np.asarray(val).size))
 
 
 class RecordingBackend(ElectronicStructureBackend):
